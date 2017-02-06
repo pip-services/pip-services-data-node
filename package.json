@@ -47,12 +47,14 @@
     "dependencies": {
         "lodash": "*",
         "async": "*",
+        "mongoose": "*",
         "pip-services-commons-node": "*"
     },
     "devDependencies": {
         "@types/node": "*",
         "@types/lodash": "*",
         "@types/async": "*",
+        "@types/mongoose": "*",
         "@types/mocha": "*",
         "@types/chai": "*",
         "memjs": "*",

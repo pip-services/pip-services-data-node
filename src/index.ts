@@ -9,5 +9,5 @@ export { ISaver } from './ISaver';
 export { ISetter } from './ISetter';
 export { IWriter } from './IWriter';
 
-//export * from './file';
+export * from './file';
 export * from './memory';

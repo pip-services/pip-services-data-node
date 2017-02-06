@@ -1,18 +1,20 @@
 let assert = require('chai').assert;
 
-import { MemoryPersistence } from '../../src/memory/MemoryPersistence';
+import { FilePersistence } from '../../src/file/FilePersistence';
 import { Dummy } from '../Dummy';
 import { ConfigParams } from 'pip-services-commons-node';
 
-suite('MemoryPersistence', ()=> {
+suite('FilePersistence', ()=> {
     
-    var db: MemoryPersistence<Dummy, string>;
+    var db: FilePersistence<Dummy, string>;
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
     beforeEach(function() {
-        db = new MemoryPersistence<Dummy, string>();
-        db.configure(new ConfigParams());
+        let fileName: string = "../FilePersistenceTest";
+
+        db = new FilePersistence<Dummy, string>();
+        db.configure(ConfigParams.fromTuples("path", fileName));
         db.open(null);
         db.clear(null);
 

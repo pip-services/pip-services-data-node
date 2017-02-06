@@ -1,0 +1,1 @@
+export { MongoDbPersistence } from './MongoDbPersistence';

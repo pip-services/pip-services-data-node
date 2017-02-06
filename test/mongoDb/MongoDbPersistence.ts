@@ -1,17 +1,17 @@
 let assert = require('chai').assert;
 
-import { MemoryPersistence } from '../../src/memory/MemoryPersistence';
+import { MongoDbPersistence } from '../../src/mongoDb/MongoDbPersistence';
 import { Dummy } from '../Dummy';
 import { ConfigParams } from 'pip-services-commons-node';
 
-suite('MemoryPersistence', ()=> {
+suite('MongoDbPersistence', ()=> {
     
-    var db: MemoryPersistence<Dummy, string>;
+    var db: MongoDbPersistence<Dummy, string>;
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
     beforeEach(function() {
-        db = new MemoryPersistence<Dummy, string>();
+        db = new MongoDbPersistence<Dummy, string>();
         db.configure(new ConfigParams());
         db.open(null);
         db.clear(null);
@@ -37,7 +37,7 @@ suite('MemoryPersistence', ()=> {
         assert.equal(_dummy2.key, dummy2.key);
         assert.equal(_dummy2.content, dummy2.content);
 
-            // Update the dummy
+        // Update the dummy
         dummy1.content = "Updated Content 1";
         var dummy = db.update(null, dummy1);
 
@@ -46,7 +46,7 @@ suite('MemoryPersistence', ()=> {
         assert.equal(dummy1.key, dummy.key);
         assert.equal(dummy1.content, dummy.content);
 
-            // Delete the dummy
+        // Delete the dummy
         db.deleteById(null, dummy1.id);
 
         // Try to get deleted dummy
