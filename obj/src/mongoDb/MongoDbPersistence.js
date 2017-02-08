@@ -1,106 +1,190 @@
 "use strict";
-var pip_services_commons_node_1 = require("pip-services-commons-node");
-var pip_services_commons_node_2 = require("pip-services-commons-node");
-var pip_services_commons_node_3 = require("pip-services-commons-node");
-var MongoDbPersistence = (function () {
-    function MongoDbPersistence(loader, saver) {
-        this._defaultMaxPageSize = 100;
+var async = require('async');
+const pip_services_commons_node_1 = require("pip-services-commons-node");
+const pip_services_commons_node_2 = require("pip-services-commons-node");
+const pip_services_commons_node_3 = require("pip-services-commons-node");
+const pip_services_commons_node_4 = require("pip-services-commons-node");
+const pip_services_commons_node_5 = require("pip-services-commons-node");
+const pip_services_commons_node_6 = require("pip-services-commons-node");
+const pip_services_commons_node_7 = require("pip-services-commons-node");
+const pip_services_commons_node_8 = require("pip-services-commons-node");
+const pip_services_commons_node_9 = require("pip-services-commons-node");
+const mongoose_1 = require("mongoose");
+class MongoDbPersistence {
+    constructor(collectionName, schema) {
+        this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.poll_size", 4, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
         this._logger = new pip_services_commons_node_1.CompositeLogger();
-        this._maxPageSize = this._defaultMaxPageSize;
-        this._entities = [];
-        this._opened = false;
-        this._loader = loader;
-        this._saver = saver;
+        this._connectionResolver = new pip_services_commons_node_3.ConnectionResolver();
+        this._credentialResolver = new pip_services_commons_node_4.CredentialResolver();
+        this._options = new pip_services_commons_node_2.ConfigParams();
+        if (collectionName == null)
+            throw new Error("collectionName could not be null");
+        this._collectionName = collectionName;
+        this._connection = mongoose_1.createConnection();
+        this._model = this._connection.model(this._collectionName, schema);
     }
-    MongoDbPersistence.prototype.setReferences = function (references) {
+    setReferences(references) {
         this._logger.setReferences(references);
-    };
-    MongoDbPersistence.prototype.configure = function (config) {
-        this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
-    };
-    MongoDbPersistence.prototype.isOpened = function () {
-        return this._opened;
-    };
-    MongoDbPersistence.prototype.open = function (correlation_id) {
-        this.load(correlation_id);
-        this._opened = true;
-    };
-    MongoDbPersistence.prototype.close = function (correlation_id) {
-        this.save(correlation_id);
-        this._opened = false;
-    };
-    MongoDbPersistence.prototype.load = function (correlation_id) {
-        if (this._loader == null)
-            return;
-        this._entities = this._loader.load(correlation_id);
-        this._logger.trace(correlation_id, "Loaded {0} of {1}", this._entities.length);
-    };
-    MongoDbPersistence.prototype.getOneById = function (correlationId, id) {
-        var items = this._entities.filter(function (x) { return x.id == id; });
-        var item = items.length > 0 ? items[0] : null;
-        if (item != null)
-            this._logger.trace(correlationId, "Retrieved {0} by {1}", item, id);
-        else
-            this._logger.trace(correlationId, "Cannot find {0} by {1}", id);
-        return item;
-    };
-    MongoDbPersistence.prototype.save = function (correlation_id) {
-        if (this._saver == null)
-            return;
-        var task = this._saver.save(correlation_id, this._entities);
-        this._logger.trace(correlation_id, "Saved {0} of {1}", this._entities.length);
-    };
-    MongoDbPersistence.prototype.create = function (correlation_id, entity) {
-        var identifiable;
-        if (typeof entity.id == "string" || entity.id == null)
-            identifiable = entity;
-        if (identifiable != null && entity.id == null)
-            pip_services_commons_node_2.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_3.IdGenerator.nextLong());
-        this._entities.push(entity);
-        this._logger.trace(correlation_id, "Created {0}", entity);
-        this.save(correlation_id);
-        return entity;
-    };
-    MongoDbPersistence.prototype.set = function (correlation_id, entity) {
-        var identifiable;
-        if (typeof entity.id == "string" || entity.id == null)
-            identifiable = entity;
-        if (identifiable != null && entity.id == null)
-            pip_services_commons_node_2.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_3.IdGenerator.nextLong());
-        var index = this._entities.map(function (x) { return x.id; }).indexOf(entity.id);
-        if (index < 0)
-            this._entities.push(entity);
-        else
-            this._entities[index] = entity;
-        this._logger.trace(correlation_id, "Set {0}", entity);
-        this.save(correlation_id);
-        return entity;
-    };
-    MongoDbPersistence.prototype.update = function (correlation_id, entity) {
-        var index = this._entities.map(function (x) { return x.id; }).indexOf(entity.id);
-        if (index < 0)
-            return null;
-        this._entities[index] = entity;
-        this._logger.trace(correlation_id, "Updated {0}", entity);
-        this.save(correlation_id);
-        return entity;
-    };
-    MongoDbPersistence.prototype.deleteById = function (correlation_id, id) {
-        var index = this._entities.map(function (x) { return x.id; }).indexOf(id);
-        var entity = this._entities[index];
-        if (index < 0)
-            return null;
-        this._entities.splice(index, 1);
-        this._logger.trace(correlation_id, "Deleted {0}", entity);
-        this.save(correlation_id);
-        return entity;
-    };
-    MongoDbPersistence.prototype.clear = function (correlation_id) {
-        this._entities = [];
-        this._logger.trace(correlation_id, "Cleared {0}");
-        this.save(correlation_id);
-    };
-    return MongoDbPersistence;
-}());
+        this._connectionResolver.setReferences(references);
+        this._credentialResolver.setReferences(references);
+    }
+    configure(config) {
+        config = config.setDefaults(this._defaultConfig);
+        this._connectionResolver.configure(config, true);
+        this._credentialResolver.configure(config, true);
+        this._options = this._options.override(config.getSection("options"));
+    }
+    isOpened() {
+        return this._connection.readyState == 1;
+    }
+    open(correlationId, callback) {
+        let connection;
+        let credential;
+        async.series([
+            (callback) => {
+                this._connectionResolver.resolve(correlationId, (err, result) => {
+                    connection = result;
+                    callback(err);
+                });
+            },
+            (callback) => {
+                this._credentialResolver.lookup(correlationId, (err, result) => {
+                    credential = result;
+                    callback(err);
+                });
+            }
+        ], (err) => {
+            if (err)
+                throw new pip_services_commons_node_5.ConfigException(correlationId, "CONNECTION_ERROR", "Connectionotions is not set properly")
+                    .withCause(err);
+            if (connection == null)
+                throw new pip_services_commons_node_5.ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
+            var host = connection.getHost();
+            if (host == null)
+                throw new pip_services_commons_node_5.ConfigException(correlationId, "NO_HOST", "Connection host is not set");
+            var port = connection.getPort();
+            if (port == 0)
+                throw new pip_services_commons_node_5.ConfigException(correlationId, "NO_PORT", "Connection port is not set");
+            var databaseName = connection.getAsNullableString("database");
+            if (databaseName == null)
+                throw new pip_services_commons_node_5.ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
+            var pollSize = this._options.getAsNullableInteger("poll_size");
+            var keepAlive = this._options.getAsNullableInteger("keep_alive");
+            var connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
+            var auto_reconnect = this._options.getAsNullableBoolean("auto_reconnect");
+            var max_page_size = this._options.getAsNullableInteger("max_page_size");
+            var debug = this._options.getAsNullableBoolean("debug");
+            this._logger.trace(correlationId, "Connecting to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+            let uri = "mongodb://" + host + (port == null ? "" : ":" + port) + "/" + databaseName;
+            let settings;
+            try {
+                settings = {
+                    server: {
+                        poolSize: pollSize,
+                        socketOptions: {
+                            keepAlive: keepAlive,
+                            connectTimeoutMS: connectTimeoutMS
+                        },
+                        auto_reconnect: auto_reconnect,
+                        max_page_size: max_page_size,
+                        debug: debug
+                    }
+                };
+                if (credential && credential.getUsername()) {
+                    settings.user = credential.getUsername();
+                    settings.pass = credential.getPassword();
+                }
+                this._connection.open(uri, settings, callback);
+                this._logger.debug(correlationId, "Connected to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+            }
+            catch (ex) {
+                throw new pip_services_commons_node_6.ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed")
+                    .withCause(ex);
+            }
+        });
+    }
+    close(correlationId) {
+        this._connection.close();
+    }
+    getOneById(correlationId, id, callback) {
+        this._model.findById(id, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
+            if (callback)
+                callback(err, data);
+        });
+    }
+    create(correlationId, entity, callback) {
+        if (entity != null && entity.id == null)
+            pip_services_commons_node_8.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_9.IdGenerator.nextLong());
+        this._model.create(entity, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, data.id);
+            if (callback)
+                callback(err, data);
+        });
+    }
+    set(correlationId, entity, callback) {
+        if (entity != null && entity.id == null) {
+            if (callback)
+                callback(null, null);
+            else
+                return;
+        }
+        var filter = {
+            id: entity.id
+        };
+        var options = {
+            new: true,
+            upsert: true
+        };
+        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, entity.id);
+            if (callback)
+                callback(err, data);
+        });
+    }
+    update(correlationId, entity, callback) {
+        if (entity != null && entity.id == null) {
+            if (callback)
+                callback(null, null);
+            else
+                return;
+        }
+        var filter = {
+            id: entity.id
+        };
+        var options = {
+            new: true,
+            upsert: false
+        };
+        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, entity.id);
+            if (callback)
+                callback(err, data);
+        });
+    }
+    deleteById(correlationId, id, callback) {
+        var filter = {
+            id: id
+        };
+        var options = {};
+        this._model.findOneAndRemove(filter, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
+            if (callback)
+                callback(err, data);
+        });
+    }
+    clear(correlationId, callback) {
+        this._connection.db.dropCollection(this._collectionName, (err) => {
+            if (err)
+                throw new pip_services_commons_node_7.BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
+                    .withCause(err);
+        });
+    }
+}
 exports.MongoDbPersistence = MongoDbPersistence;
 //# sourceMappingURL=MongoDbPersistence.js.map

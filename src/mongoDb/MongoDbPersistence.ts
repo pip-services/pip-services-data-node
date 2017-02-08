@@ -1,4 +1,3 @@
-var mongoose = require('mongoose');
 var async = require('async');
 
 import { IIdentifiable } from 'pip-services-commons-node';
@@ -17,12 +16,12 @@ import { CredentialParams } from 'pip-services-commons-node';
 import { ConfigException } from 'pip-services-commons-node';
 import { ConnectionException } from 'pip-services-commons-node';
 import { BadRequestException } from 'pip-services-commons-node';
+import { ObjectWriter } from 'pip-services-commons-node';
+import { IdGenerator } from 'pip-services-commons-node';
 
-import { IWriter } from '../.';
-import { IGetter } from '../.';
-import { ISetter } from '../.';
-import { ILoader } from '../.';
-import { ISaver } from '../.';
+import { Document, Model, Schema, createConnection, model } from "mongoose";
+
+import { IWriter, IGetter, ISetter, ILoader, ISaver } from '../.';
 
 export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IReferenceable, IConfigurable, IOpenable, ICleanable,
     IWriter<T, K>, IGetter<T, K>, ISetter<T> {
@@ -49,14 +48,15 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
 
     protected _connection: any;
     protected _database: any;
-    protected _collection: any;
+    protected _model: any;
 
-    public constructor(collectionName: string) {
+    public constructor(collectionName: string, schema: Schema) {
         if (collectionName == null)
             throw new Error("collectionName could not be null");
 
         this._collectionName = collectionName;
-        this._connection = mongoose.createConnection();
+        this._connection = createConnection();
+        this._model = this._connection.model(this._collectionName, schema)
     }
 
     public setReferences(references: IReferences): void {
@@ -78,107 +78,178 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         return this._connection.readyState == 1;
     }
 
-    public open(correlation_id: string): void {
+    public open(correlationId: string,  callback?: (err: any) => void): void {
         let connection: ConnectionParams;
         let credential: CredentialParams;
 
         async.series([
             (callback) => {
-                this._connectionResolver.resolve(correlation_id, (err: any, result: ConnectionParams) => {
-                    var connection = result;
+                this._connectionResolver.resolve(correlationId, (err: any, result: ConnectionParams) => {
+                    connection = result;
                     callback(err);
                 });
             },
             (callback) => {
-                this._credentialResolver.lookup(correlation_id, (err: any, result: CredentialParams) => {
-                    var credential = result;
+                this._credentialResolver.lookup(correlationId, (err: any, result: CredentialParams) => {
+                    credential = result;
                     callback(err);
                 });
             }
         ], (err) => {
             if (err)
-                throw new ConfigException(correlation_id, "CONNECTION_ERROR", "Connectionotions is not set properly")
+                throw new ConfigException(correlationId, "CONNECTION_ERROR", "Connectionotions is not set properly")
                     .withCause(err);
 
             if (connection == null)
-                throw new ConfigException(correlation_id, "NO_CONNECTION", "Database connection is not set");
+                throw new ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
 
             var host = connection.getHost();
             if (host == null)
-                throw new ConfigException(correlation_id, "NO_HOST", "Connection host is not set");
+                throw new ConfigException(correlationId, "NO_HOST", "Connection host is not set");
 
             var port = connection.getPort();
             if (port == 0)
-                throw new ConfigException(correlation_id, "NO_PORT", "Connection port is not set");
+                throw new ConfigException(correlationId, "NO_PORT", "Connection port is not set");
 
             var databaseName = connection.getAsNullableString("database");
             if (databaseName == null)
-                throw new ConfigException(correlation_id, "NO_DATABASE", "Connection database is not set");
+                throw new ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
 
-            this._logger.trace(correlation_id, "Connecting to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+            var pollSize = this._options.getAsNullableInteger("poll_size");
+            var keepAlive = this._options.getAsNullableInteger("keep_alive");
+            var connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
+            var auto_reconnect = this._options.getAsNullableBoolean("auto_reconnect");
+            var max_page_size = this._options.getAsNullableInteger("max_page_size");
+            var debug = this._options.getAsNullableBoolean("debug");
+
+            this._logger.trace(correlationId, "Connecting to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+
+            let uri: string = "mongodb://" + host + (port == null ? "" : ":" + port) + "/" + databaseName;
+            let settings: any;
 
             try {
-                // var settings = {
-                //     server: new MongoServerAddress(host, port),
-                //     MaxConnectionPoolSize =  _options.GetAsInteger("poll_size"),
-                //     ConnectTimeout = _options.GetAsTimeSpan("connect_timeout"),
-                //     //SocketTimeout =
-                //     //    new TimeSpan(options.GetInteger("server.socketOptions.socketTimeoutMS")*
-                //     //                 TimeSpan.TicksPerMillisecond)
-                // };
+                settings = {
+                    server: {
+                        poolSize: pollSize,
+                        socketOptions: {
+                            keepAlive: keepAlive,
+                            connectTimeoutMS: connectTimeoutMS
+                        },
+                        auto_reconnect: auto_reconnect,
+                        max_page_size: max_page_size,
+                        debug: debug
+                    }
+                };
 
-                // if (credential.Username != null)
-                // {
-                //     var dbCredential = MongoCredential.CreateCredential(databaseName, credential.Username, credential.Password);
-                //     settings.Credentials = new[] { dbCredential };
-                // }
+                if (credential && credential.getUsername()) {
+                    settings.user = credential.getUsername();
+                    settings.pass = credential.getPassword();
+                }
 
-                // _connection = new MongoClient(settings);
-                // _database = _connection.GetDatabase(databaseName);
-                // _collection = _database.GetCollection<T>(_collectionName);
+                this._connection.open(uri, settings, callback);
 
-                // _logger.Debug(correlationId, "Connected to mongodb database {0}, collection {1}", databaseName, _collectionName);
+                this._logger.debug(correlationId, "Connected to mongodb database {0}, collection {1}", databaseName, this._collectionName);
             } catch (ex) {
-                throw new ConnectionException(correlation_id, "ConnectFailed", "Connection to mongodb failed")
+                throw new ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed")
                     .withCause(ex);
             }
         });
     }
 
-    public close(correlation_id: string): void {
+    public close(correlationId: string): void {
         this._connection.close();
     }
 
-    private load(correlation_id: string): void {
+    public getOneById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
+        this._model.findById(id, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
+            if (callback) 
+                callback(err, data);
+        });
     }
 
-    public getOneById(correlationId: string, id: K): T {
-        return;
+    public create(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
+        if (entity != null && entity.id == null)
+            ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
+
+        this._model.create(entity, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, data.id);
+            if (callback) 
+                callback(err, data);
+        });
     }
 
-    public save(correlation_id: string): void {
+    public set(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
+        if (entity != null && entity.id == null) {
+            if (callback)
+                callback(null, null);
+            else
+                return;
+        }
+
+        var filter = {
+            id: entity.id
+        };
+
+        var options = {
+            new: true,
+            upsert: true
+        };
+        
+        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, entity.id);
+            if (callback) 
+                callback(err, data);
+        });
     }
 
-    public create(correlation_id: string, entity: T): T {
-        return;
+    public update(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
+        if (entity != null && entity.id == null) {
+            if (callback)
+                callback(null, null);
+            else
+                return;
+        }
+
+        var filter = {
+            id: entity.id
+        };
+
+        var options = {
+            new: true,
+            upsert: false
+        };
+
+        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, entity.id);
+            if (callback) 
+                callback(err, data);
+        });
     }
 
-    public set(correlation_id: string, entity: T): T {
-        return;
+    public deleteById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
+        var filter = {
+            id: id
+        };
+
+        var options = {};
+
+        this._model.findOneAndRemove(filter, options, (err, data) => {
+            if (!err)
+                this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
+            if (callback) 
+                callback(err, data);
+        });
     }
 
-    public update(correlation_id: string, entity: T): T {
-        return;
-    }
-
-    public deleteById(correlation_id: string, id: K): T {
-        return;
-    }
-
-    public clear(correlation_id: string): void {
+    public clear(correlationId: string, callback?: (err: any) => void): void {
         this._connection.db.dropCollection(this._collectionName, (err) => {
             if (err)
-                throw new BadRequestException(correlation_id, "DropCollectionFailed", "Connection to mongodb failed")
+                throw new BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
                     .withCause(err);
         });
     }
