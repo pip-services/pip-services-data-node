@@ -24,8 +24,9 @@ export declare class MongoDbPersistence<T extends IIdentifiable<K>, K> implement
     setReferences(references: IReferences): void;
     configure(config: ConfigParams): void;
     isOpened(): boolean;
+    private jsonToPublic(value);
     open(correlationId: string, callback?: (err: any) => void): void;
-    close(correlationId: string): void;
+    close(correlationId: string, callback?: (err: any) => void): void;
     getOneById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void;
     create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
     set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;

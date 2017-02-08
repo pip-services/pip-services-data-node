@@ -3,33 +3,34 @@ var async = require('async');
 
 import { MongoDbPersistence } from '../../src/mongoDb/MongoDbPersistence';
 import { Dummy } from '../Dummy';
+import { DummySchema } from './DummySchema';
 import { ConfigParams } from 'pip-services-commons-node';
 import { Schema } from 'mongoose';
 
-suite.only('MongoDbPersistence', ()=> {
+suite('MongoDbPersistence', ()=> {
     
     var db: MongoDbPersistence<Dummy, string>;
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
     beforeEach(function(done) {
-        db = new MongoDbPersistence<Dummy, string>("dummies", new Schema());
+        db = new MongoDbPersistence<Dummy, string>("dummies", DummySchema);
         db.configure(ConfigParams.fromTuples(
             "connection.type", "mongodb",
             "connection.database", "test",
             "connection.uri", ""
         ));
         db.open(null, (err: any) => {
-            db.clear(null);
+            db.clear(null, (err) => {
+                _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
+                _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
 
-            _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
-            _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
-
-            done(err);
+                done(err);
+            });
         });
     });
 
-    test('Crud Operations', () => {
+    test('Crud Operations', (done) => {
         let dummy1: Dummy;
         let dummy2: Dummy;
 
@@ -42,6 +43,8 @@ suite.only('MongoDbPersistence', ()=> {
                     assert.isNotNull(dummy1.id);
                     assert.equal(_dummy1.key, dummy1.key);
                     assert.equal(_dummy1.content, dummy1.content);
+
+                    callback(err);
                 });
             },
             (callback) => {
@@ -52,28 +55,56 @@ suite.only('MongoDbPersistence', ()=> {
                     assert.isNotNull(dummy2.id);
                     assert.equal(_dummy2.key, dummy2.key);
                     assert.equal(_dummy2.content, dummy2.content);
+
+                    callback(err);
                 });
             },
             (callback) => {
                 // Update the dummy
                 dummy1.content = "Updated Content 1";
                 db.update(null, dummy1, (err: any, result: Dummy) => {
-                    var dummy = result;
-                    assert.isNotNull(dummy);
-                    assert.equal(dummy1.id, dummy.id);
-                    assert.equal(dummy1.key, dummy.key);
-                    assert.equal(dummy1.content, dummy.content);
+                    assert.isNotNull(result);
+                    assert.equal(dummy1.id, result.id);
+                    assert.equal(dummy1.key, result.key);
+                    assert.equal(dummy1.content, result.content);
+
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Get the dummy by Id
+                db.getOneById(null, dummy1.id, (err: any, result: Dummy) => {
+                    // Try to get item
+                    assert.isNotNull(result);
+                    assert.equal(dummy1.id, result.id);
+                    assert.equal(dummy1.key, result.key);
+                    assert.equal(dummy1.content, result.content);
+
+                    callback(err);
                 });
             },
             (callback) => {
                 // Delete the dummy
                 db.deleteById(null, dummy1.id, (err: any, result: Dummy) => {
-                    // Try to get deleted dummy
-                    var dummy = db.getOneById(null, dummy1.id);
-                    assert.isNull(dummy);
+                    assert.isNotNull(result);
+                    assert.equal(dummy1.id, result.id);
+                    assert.equal(dummy1.key, result.key);
+                    assert.equal(dummy1.content, result.content);
+
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Get the deleted dummy
+                db.getOneById(null, dummy1.id, (err: any, result: Dummy) => {
+                    // Try to get item
+                    assert.isNull(result);
+
+                    callback(err);
                 });
             }
         ], (err) => {
+            done();
         });
     });
 

@@ -37,6 +37,12 @@ class MongoDbPersistence {
     isOpened() {
         return this._connection.readyState == 1;
     }
+    // Convert object to JSON format
+    jsonToPublic(value) {
+        if (value && value.toJSON)
+            value = value.toJSON();
+        return value;
+    }
     open(correlationId, callback) {
         let connection;
         let credential;
@@ -103,25 +109,40 @@ class MongoDbPersistence {
             }
         });
     }
-    close(correlationId) {
-        this._connection.close();
+    close(correlationId, callback) {
+        this._connection.close((err) => {
+            if (err) {
+                err = new pip_services_commons_node_6.ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ')
+                    .withCause(err);
+            }
+            else {
+                this._logger.trace(correlationId, "Disconnected from {0} successfully", this._collectionName);
+            }
+            ;
+            callback(err);
+        });
     }
     getOneById(correlationId, id, callback) {
         this._model.findById(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
-            if (callback)
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
     create(correlationId, entity, callback) {
         if (entity != null && entity.id == null)
             pip_services_commons_node_8.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_9.IdGenerator.nextLong());
+        entity._id = entity.id;
         this._model.create(entity, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, data.id);
-            if (callback)
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
     set(correlationId, entity, callback) {
@@ -141,8 +162,10 @@ class MongoDbPersistence {
         this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, entity.id);
-            if (callback)
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
     update(correlationId, entity, callback) {
@@ -152,37 +175,37 @@ class MongoDbPersistence {
             else
                 return;
         }
-        var filter = {
-            id: entity.id
-        };
         var options = {
-            new: true,
-            upsert: false
+            new: true
         };
-        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+        this._model.findByIdAndUpdate(entity.id, entity, options, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, entity.id);
-            if (callback)
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
     deleteById(correlationId, id, callback) {
-        var filter = {
-            id: id
-        };
-        var options = {};
-        this._model.findOneAndRemove(filter, options, (err, data) => {
+        this._model.findByIdAndRemove(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
-            if (callback)
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
     clear(correlationId, callback) {
         this._connection.db.dropCollection(this._collectionName, (err) => {
-            if (err)
-                throw new pip_services_commons_node_7.BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
+            if (err && err.message != "ns not found")
+                err = new pip_services_commons_node_7.BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
                     .withCause(err);
+            else if (err && err.message == "ns not found")
+                err = null;
+            if (callback)
+                callback(err);
         });
     }
 }

@@ -78,6 +78,13 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         return this._connection.readyState == 1;
     }
 
+    // Convert object to JSON format
+    private jsonToPublic(value: any): any {
+        if (value && value.toJSON)
+            value = value.toJSON();
+        return value;
+    }    
+
     public open(correlationId: string,  callback?: (err: any) => void): void {
         let connection: ConnectionParams;
         let credential: CredentialParams;
@@ -156,16 +163,26 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public close(correlationId: string): void {
-        this._connection.close();
+    public close(correlationId: string, callback?: (err: any) => void): void {
+        this._connection.close((err) => {
+            if (err) {
+                err = new ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ')
+                    .withCause(err);
+            } else {
+                this._logger.trace(correlationId, "Disconnected from {0} successfully", this._collectionName);
+            };
+            callback(err);
+        });
     }
 
     public getOneById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
         this._model.findById(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
-            if (callback) 
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
 
@@ -173,11 +190,15 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         if (entity != null && entity.id == null)
             ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
 
+        (entity as any)._id = entity.id;
+
         this._model.create(entity, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, data.id);
-            if (callback) 
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
 
@@ -201,8 +222,10 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, entity.id);
-            if (callback) 
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
 
@@ -214,43 +237,41 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
                 return;
         }
 
-        var filter = {
-            id: entity.id
-        };
-
         var options = {
-            new: true,
-            upsert: false
+            new: true
         };
 
-        this._model.findOneAndUpdate(filter, entity, options, (err, data) => {
+        this._model.findByIdAndUpdate(entity.id, entity, options, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, entity.id);
-            if (callback) 
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
 
     public deleteById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
-        var filter = {
-            id: id
-        };
-
-        var options = {};
-
-        this._model.findOneAndRemove(filter, options, (err, data) => {
+        this._model.findByIdAndRemove(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
-            if (callback) 
+            if (callback) {
+                data = this.jsonToPublic(data);
                 callback(err, data);
+            }
         });
     }
 
     public clear(correlationId: string, callback?: (err: any) => void): void {
         this._connection.db.dropCollection(this._collectionName, (err) => {
-            if (err)
-                throw new BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
+            if (err && err.message != "ns not found")
+                err = new BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
                     .withCause(err);
+            else if (err && err.message == "ns not found")
+                err = null;
+            
+            if (callback) 
+                callback(err);
         });
     }
 
