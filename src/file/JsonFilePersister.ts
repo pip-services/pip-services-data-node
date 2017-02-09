@@ -34,25 +34,42 @@ export class JsonFilePersister<T> implements ILoader<T>, ISaver<T>, IConfigurabl
         this.path = config.getAsString("path");
     }
 
-    public load(correlation_id: string): T[] {
+    public load(correlation_id: string, callback: (err: any, data: T[]) => void): void {
         if (!fs.existsSync(this.path))
-            return [];
+        {
+            callback(new FileException(correlation_id, "NOT_FOUND", "File not found: " + this.path), []);
+            return;
+        }
 
         try {
             let json: any = fs.readFileSync(this.path, "utf8");
             var list = JsonConverter.toNullableMap(json);
-            return ArrayConverter.listToArray(list);
+            var arr = ArrayConverter.listToArray(list);
+
+            callback(null, arr);
         } catch (ex) {
-            throw new FileException(correlation_id, "READ_FAILED", "Failed to read data file: " + this.path).withCause(ex);
+            var err = new FileException(correlation_id, "READ_FAILED", "Failed to read data file: " + this.path)
+                .withCause(ex);
+
+            callback(err, null);
         }
     }
 
-    public save(correlation_id: string, entities: T[]): void {
+    public save(correlation_id: string, entities: T[], callback?: (err?: any) => void): void {
         try {
             var json = JsonConverter.toJson(entities);
             fs.writeFileSync(this.path, json);
+            if (callback)
+                callback();
         } catch (ex) {
-            throw new FileException(correlation_id, "WRITE_FAILED", "Failed to write data file: " + this.path).withCause(ex);
+            var err = new FileException(correlation_id, "WRITE_FAILED", "Failed to write data file: " + this.path)
+                .withCause(ex);
+
+            if (callback) {
+                callback(err);
+            } else {
+                throw err;
+            }
         }
     }
 

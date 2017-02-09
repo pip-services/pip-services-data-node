@@ -13,7 +13,7 @@ suite('MongoDbPersistence', ()=> {
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
-    beforeEach(function(done) {
+    beforeEach((done) => {
         db = new MongoDbPersistence<Dummy, string>("dummies", DummySchema);
         db.configure(ConfigParams.fromTuples(
             "connection.type", "mongodb",

@@ -1,19 +1,12 @@
-import { IIdentifiable } from 'pip-services-commons-node';
-import { IReferenceable } from 'pip-services-commons-node';
-import { IReferences } from 'pip-services-commons-node';
-import { IConfigurable } from 'pip-services-commons-node';
-import { IOpenable } from 'pip-services-commons-node';
-import { ICleanable } from 'pip-services-commons-node';
+import { IIdentifiable, IReferenceable, IReferences, IConfigurable, IOpenable, ICleanable } from 'pip-services-commons-node';
 import { CompositeLogger } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
-import { SortParams } from 'pip-services-commons-node';
 import { IWriter } from '../.';
 import { IGetter } from '../.';
 import { ISetter } from '../.';
-import { IQuerableReader } from '../.';
 import { ILoader } from '../.';
 import { ISaver } from '../.';
-export declare class MemoryPersistence<T extends IIdentifiable<K>, K> implements IReferenceable, IConfigurable, IOpenable, ICleanable, IWriter<T, K>, IGetter<T, K>, ISetter<T>, IQuerableReader<T> {
+export declare class MemoryPersistence<T extends IIdentifiable<K>, K> implements IReferenceable, IConfigurable, IOpenable, ICleanable, IWriter<T, K>, IGetter<T, K>, ISetter<T> {
     private readonly _defaultMaxPageSize;
     protected _logger: CompositeLogger;
     protected _maxPageSize: number;
@@ -25,15 +18,14 @@ export declare class MemoryPersistence<T extends IIdentifiable<K>, K> implements
     setReferences(references: IReferences): void;
     configure(config: ConfigParams): void;
     isOpened(): boolean;
-    open(correlation_id: string): void;
-    close(correlation_id: string): void;
-    private load(correlation_id);
-    getListByQuery(correlation_id: string, query: string, sort: SortParams): T[];
-    getOneById(correlationId: string, id: K): T;
-    save(correlation_id: string): void;
-    create(correlation_id: string, entity: T): T;
-    set(correlation_id: string, entity: T): T;
-    update(correlation_id: string, entity: T): T;
-    deleteById(correlation_id: string, id: K): T;
-    clear(correlation_id: string): void;
+    open(correlationId: string, callback?: (err?: any) => void): void;
+    private load(correlationId, callback?);
+    close(correlationId: string, callback?: (err?: any) => void): void;
+    save(correlationId: string, callback?: (err?: any) => void): void;
+    getOneById(correlationId: string, id: K, callback: (err: any, data: T) => void): void;
+    create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
+    set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
+    update(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
+    deleteById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void;
+    clear(correlationId: string, callback?: (err?: any) => void): void;
 }

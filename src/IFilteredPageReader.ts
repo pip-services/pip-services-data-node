@@ -4,5 +4,5 @@ import { PagingParams } from 'pip-services-commons-node';
 import { SortParams } from 'pip-services-commons-node';
 
 export interface IFilteredPageReader<T> {
-    getPageByFilter(correlation_id: string, filter: FilterParams, paging: PagingParams, sort: SortParams): DataPage<T>;
+    getPageByFilter(correlation_id: string, filter: FilterParams, paging: PagingParams, sort: SortParams, callback: (err: any, data: DataPage<T>) => void): void;
 }

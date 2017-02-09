@@ -74,10 +74,6 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         this._options = this._options.override(config.getSection("options"));
     }
 
-    public isOpened(): boolean {
-        return this._connection.readyState == 1;
-    }
-
     // Convert object to JSON format
     private jsonToPublic(value: any): any {
         if (value && value.toJSON)
@@ -85,7 +81,11 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         return value;
     }    
 
-    public open(correlationId: string,  callback?: (err: any) => void): void {
+    public isOpened(): boolean {
+        return this._connection.readyState == 1;
+    }
+
+    public open(correlationId: string, callback?: (err: any) => void): void {
         let connection: ConnectionParams;
         let credential: CredentialParams;
 
@@ -175,7 +175,7 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public getOneById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
+    public getOneById(correlationId: string, id: K, callback: (err: any, data: T) => void): void {
         this._model.findById(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
@@ -186,9 +186,16 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public create(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
-        if (entity != null && entity.id == null)
+    public create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
+        if (entity == null) {
+            if (callback)
+                callback(null, null);
+            return;
+        }
+
+        if (entity.id == null) {
             ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
+        }
 
         (entity as any)._id = entity.id;
 
@@ -202,13 +209,18 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public set(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
-        if (entity != null && entity.id == null) {
+    public set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
+        if (entity == null) {
             if (callback)
                 callback(null, null);
-            else
-                return;
+            return;
         }
+
+        if (entity.id == null) {
+            ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
+        }
+
+        (entity as any)._id = entity.id;
 
         var filter = {
             id: entity.id
@@ -229,12 +241,11 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public update(correlationId: string, entity: T,  callback?: (err: any, data: T) => void): void {
-        if (entity != null && entity.id == null) {
+    public update(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
+        if (entity == null || entity.id == null) {
             if (callback)
                 callback(null, null);
-            else
-                return;
+            return;
         }
 
         var options = {
@@ -251,7 +262,7 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public deleteById(correlationId: string, id: K,  callback?: (err: any, data: T) => void): void {
+    public deleteById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void {
         this._model.findByIdAndRemove(id, (err, data) => {
             if (!err)
                 this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
@@ -262,7 +273,7 @@ export class MongoDbPersistence<T extends IIdentifiable<K>, K> implements IRefer
         });
     }
 
-    public clear(correlationId: string, callback?: (err: any) => void): void {
+    public clear(correlationId: string, callback?: (err?: any) => void): void {
         this._connection.db.dropCollection(this._collectionName, (err) => {
             if (err && err.message != "ns not found")
                 err = new BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")

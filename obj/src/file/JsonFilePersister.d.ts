@@ -7,6 +7,6 @@ export declare class JsonFilePersister<T> implements ILoader<T>, ISaver<T>, ICon
     path: string;
     constructor(path?: string);
     configure(config: ConfigParams): void;
-    load(correlation_id: string): T[];
-    save(correlation_id: string, entities: T[]): void;
+    load(correlation_id: string, callback: (err: any, data: T[]) => void): void;
+    save(correlation_id: string, entities: T[], callback?: (err?: any) => void): void;
 }

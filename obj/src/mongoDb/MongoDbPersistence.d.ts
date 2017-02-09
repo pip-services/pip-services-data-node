@@ -23,14 +23,14 @@ export declare class MongoDbPersistence<T extends IIdentifiable<K>, K> implement
     constructor(collectionName: string, schema: Schema);
     setReferences(references: IReferences): void;
     configure(config: ConfigParams): void;
-    isOpened(): boolean;
     private jsonToPublic(value);
+    isOpened(): boolean;
     open(correlationId: string, callback?: (err: any) => void): void;
     close(correlationId: string, callback?: (err: any) => void): void;
-    getOneById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void;
+    getOneById(correlationId: string, id: K, callback: (err: any, data: T) => void): void;
     create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
     set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
     update(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
     deleteById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void;
-    clear(correlationId: string, callback?: (err: any) => void): void;
+    clear(correlationId: string, callback?: (err?: any) => void): void;
 }

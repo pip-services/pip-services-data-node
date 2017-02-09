@@ -34,14 +34,14 @@ class MongoDbPersistence {
         this._credentialResolver.configure(config, true);
         this._options = this._options.override(config.getSection("options"));
     }
-    isOpened() {
-        return this._connection.readyState == 1;
-    }
     // Convert object to JSON format
     jsonToPublic(value) {
         if (value && value.toJSON)
             value = value.toJSON();
         return value;
+    }
+    isOpened() {
+        return this._connection.readyState == 1;
     }
     open(correlationId, callback) {
         let connection;
@@ -133,8 +133,14 @@ class MongoDbPersistence {
         });
     }
     create(correlationId, entity, callback) {
-        if (entity != null && entity.id == null)
+        if (entity == null) {
+            if (callback)
+                callback(null, null);
+            return;
+        }
+        if (entity.id == null) {
             pip_services_commons_node_8.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_9.IdGenerator.nextLong());
+        }
         entity._id = entity.id;
         this._model.create(entity, (err, data) => {
             if (!err)
@@ -146,12 +152,15 @@ class MongoDbPersistence {
         });
     }
     set(correlationId, entity, callback) {
-        if (entity != null && entity.id == null) {
+        if (entity == null) {
             if (callback)
                 callback(null, null);
-            else
-                return;
+            return;
         }
+        if (entity.id == null) {
+            pip_services_commons_node_8.ObjectWriter.setProperty(entity, "id", pip_services_commons_node_9.IdGenerator.nextLong());
+        }
+        entity._id = entity.id;
         var filter = {
             id: entity.id
         };
@@ -169,11 +178,10 @@ class MongoDbPersistence {
         });
     }
     update(correlationId, entity, callback) {
-        if (entity != null && entity.id == null) {
+        if (entity == null || entity.id == null) {
             if (callback)
                 callback(null, null);
-            else
-                return;
+            return;
         }
         var options = {
             new: true

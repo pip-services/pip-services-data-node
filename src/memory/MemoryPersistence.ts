@@ -1,15 +1,8 @@
-import { IIdentifiable } from 'pip-services-commons-node';
-import { IStringIdentifiable } from 'pip-services-commons-node';
-import { IReferenceable } from 'pip-services-commons-node';
-import { IReferences } from 'pip-services-commons-node';
-import { IConfigurable } from 'pip-services-commons-node';
-import { IOpenable } from 'pip-services-commons-node';
-import { ICleanable } from 'pip-services-commons-node';
+import { IIdentifiable, IStringIdentifiable, IReferenceable, IReferences, IConfigurable, IOpenable, ICleanable } from 'pip-services-commons-node';
 import { CompositeLogger } from 'pip-services-commons-node';
-import { ConfigParams } from 'pip-services-commons-node';
-import { SortParams } from 'pip-services-commons-node';
-import { ObjectWriter } from 'pip-services-commons-node';
-import { IdGenerator } from 'pip-services-commons-node';
+import { ConfigParams, SortParams } from 'pip-services-commons-node';
+import { ObjectWriter, IdGenerator } from 'pip-services-commons-node';
+import { NotFoundException } from 'pip-services-commons-node';
 
 import { IWriter } from '../.';
 import { IGetter } from '../.';
@@ -19,7 +12,7 @@ import { ILoader } from '../.';
 import { ISaver } from '../.';
 
 export class MemoryPersistence<T extends IIdentifiable<K>, K> implements IReferenceable, IConfigurable, IOpenable, ICleanable,
-    IWriter<T, K>, IGetter<T, K>, ISetter<T>, IQuerableReader<T> {
+    IWriter<T, K>, IGetter<T, K>, ISetter<T> {
 
     private readonly _defaultMaxPageSize: number = 100;
 
@@ -48,33 +41,54 @@ export class MemoryPersistence<T extends IIdentifiable<K>, K> implements IRefere
         return this._opened;
     }
 
-    public open(correlation_id: string): void {
-        this.load(correlation_id);
-        this._opened = true;
+    public open(correlationId: string,  callback?: (err?: any) => void): void {
+        this.load(correlationId, (err) => {
+            this._opened = true;
+            if (callback)
+                callback(err);
+        });
     }
 
-    public close(correlation_id: string): void {
-        this.save(correlation_id);
-        this._opened = false;
-    }
-
-    private load(correlation_id: string): void {
-        if (this._loader == null) return;
+    private load(correlationId: string, callback?: (err?: any) => void): void {
+        if (this._loader == null) {
+            if (callback)
+                callback();
+            return;
+        }
             
-        this._entities = this._loader.load(correlation_id);
-        this._logger.trace(correlation_id, "Loaded {0} of {1}", this._entities.length);
+        this._loader.load(correlationId, (err: Error, data: T[]) => {
+            this._entities = data;
+            this._logger.trace(correlationId, "Loaded {0} of {1}", this._entities.length);
+
+            if (callback)
+                callback(err);
+        });
     }
 
-    public getListByQuery(correlation_id: string, query: string, sort: SortParams): T[] {
-        let result: T[];
-
-        this._logger.trace(correlation_id, "Retrieved {0} of {1}", this._entities.length);
-        result = this._entities.slice(0);
-
-        return result;
+    public close(correlationId: string, callback?: (err?: any) => void): void {
+        this.save(correlationId, (err) => {
+            this._opened = false;
+            if (callback)
+                callback(err);
+        });
     }
 
-    public getOneById(correlationId: string, id: K): T {
+    public save(correlationId: string, callback?: (err?: any) => void): void {
+        if (this._saver == null) {
+            if (callback)
+                callback();
+            return;
+        }
+
+        var task = this._saver.save(correlationId, this._entities, (err: Error) => {
+            this._logger.trace(correlationId, "Saved {0} of {1}", this._entities.length);
+
+            if (callback)
+                callback(err);
+        });
+    }
+
+    public getOneById(correlationId: string, id: K, callback: (err: any, data: T) => void): void {
         var items = this._entities.filter((x) => {return x.id == id;});
         var item = items.length > 0 ? items[0] : null;
 
@@ -83,78 +97,94 @@ export class MemoryPersistence<T extends IIdentifiable<K>, K> implements IRefere
         else
             this._logger.trace(correlationId, "Cannot find {0} by {1}", id);
 
-        return item;
+        callback(null, item);
     }
 
-    public save(correlation_id: string): void {
-    	if (this._saver == null) return;
-        var task = this._saver.save(correlation_id, this._entities);
-        this._logger.trace(correlation_id, "Saved {0} of {1}", this._entities.length);
-    }
+    public create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
+        if (entity == null) {
+            if (callback)
+                callback(null, null);
+            return;
+        }
 
-    public create(correlation_id: string, entity: T): T {
-        let identifiable: IStringIdentifiable;
-        if (typeof entity.id == "string" || entity.id == null)
-            identifiable = (entity as any) as IStringIdentifiable;
-
-        if (identifiable != null && entity.id == null)
+        if (entity.id == null) {
             ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
+        }
 
         this._entities.push(entity);
-        this._logger.trace(correlation_id, "Created {0}", entity);
+        this._logger.trace(correlationId, "Created {0}", entity);
 
-        this.save(correlation_id);
-
-        return entity;
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err, entity)
+        });
     }
 
-    public set(correlation_id: string, entity: T): T {
-        let identifiable: IStringIdentifiable;
-        if (typeof entity.id == "string" || entity.id == null)
-            identifiable = (entity as any) as IStringIdentifiable;
+    public set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
+        if (entity == null) {
+            if (callback)
+                callback(null, null);
+            return;
+        }
 
-        if (identifiable != null && entity.id == null)
+        if (entity.id == null) {
             ObjectWriter.setProperty(entity, "id", IdGenerator.nextLong());
+        }
 
         var index = this._entities.map((x) => { return x.id; }).indexOf(entity.id);
 
         if (index < 0) this._entities.push(entity);
         else this._entities[index] = entity;
 
-        this._logger.trace(correlation_id, "Set {0}", entity);
-        this.save(correlation_id);
-        return entity;
+        this._logger.trace(correlationId, "Set {0}", entity);
+
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err, entity)
+        });
     }
 
-    public update(correlation_id: string, entity: T): T {
+    public update(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void {
         var index = this._entities.map((x) => { return x.id; }).indexOf(entity.id);
 
-        if (index < 0) return null;
+        if (index < 0) {
+            this._logger.trace(correlationId, "Item with id = {0} was not found", entity.id);
+            callback(null, null);
+            return;
+        }
 
         this._entities[index] = entity;
-        this._logger.trace(correlation_id, "Updated {0}", entity);
-        this.save(correlation_id);
+        this._logger.trace(correlationId, "Updated {0}", entity);
 
-        return entity;
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err, entity)
+        });
     }
 
-    public deleteById(correlation_id: string, id: K): T {
+    public deleteById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void {
         var index = this._entities.map((x) => { return x.id; }).indexOf(id);
         var entity = this._entities[index];
 
-        if (index < 0) return null;
+        if (index < 0) {
+            this._logger.trace(correlationId, "Item with id = {0} was not found", entity.id);
+            callback(null, null);
+            return;
+        }
 
         this._entities.splice(index, 1);
-        this._logger.trace(correlation_id, "Deleted {0}", entity);
-        this.save(correlation_id);
+        this._logger.trace(correlationId, "Deleted {0}", entity);
 
-        return entity;
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err, entity)
+        });
     }
 
-    public clear(correlation_id: string): void {
+    public clear(correlationId: string, callback?: (err?: any) => void): void {
         this._entities = [];
-        this._logger.trace(correlation_id, "Cleared {0}");
-        this.save(correlation_id);
+        this._logger.trace(correlationId, "Cleared {0}");
+        this.save(correlationId, callback);
     }
 
 }
