@@ -1,18 +1,18 @@
 let assert = require('chai').assert;
 var async = require('async');
 
-import { MemoryPersistence } from '../../src/memory/MemoryPersistence';
+import { IdentifiableMemoryPersistence } from '../../src/memory/IdentifiableMemoryPersistence';
 import { Dummy } from '../Dummy';
 import { ConfigParams } from 'pip-services-commons-node';
 
-suite('MemoryPersistence', ()=> {
+suite('IdentifiableMemoryPersistence', ()=> {
     
-    var db: MemoryPersistence<Dummy, string>;
+    var db: IdentifiableMemoryPersistence<Dummy, string>;
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
     beforeEach((done) => {
-        db = new MemoryPersistence<Dummy, string>();
+        db = new IdentifiableMemoryPersistence<Dummy, string>();
         db.configure(new ConfigParams());
         db.open(null, (err: any) => {
             db.clear(null, (err) => {

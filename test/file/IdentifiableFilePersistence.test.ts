@@ -1,33 +1,26 @@
 let assert = require('chai').assert;
 var async = require('async');
 
-import { MongoDbPersistence } from '../../src/mongoDb/MongoDbPersistence';
+import { IdentifiableFilePersistence } from '../../src/file/IdentifiableFilePersistence';
 import { Dummy } from '../Dummy';
-import { DummySchema } from './DummySchema';
 import { ConfigParams } from 'pip-services-commons-node';
-import { Schema } from 'mongoose';
 
-suite('MongoDbPersistence', ()=> {
+suite('IdentifiableFilePersistence', ()=> {
     
-    var db: MongoDbPersistence<Dummy, string>;
+    var db: IdentifiableFilePersistence<Dummy, string>;
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
-    beforeEach((done) => {
-        db = new MongoDbPersistence<Dummy, string>("dummies", DummySchema);
-        db.configure(ConfigParams.fromTuples(
-            "connection.type", "mongodb",
-            "connection.database", "test",
-            "connection.uri", ""
-        ));
-        db.open(null, (err: any) => {
-            db.clear(null, (err) => {
-                _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
-                _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
+    beforeEach(function() {
+        let fileName: string = "./data/dummies.json";
 
-                done(err);
-            });
-        });
+        db = new IdentifiableFilePersistence<Dummy, string>();
+        db.configure(ConfigParams.fromTuples("path", fileName));
+        db.open(null);
+        db.clear(null);
+
+        _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
+        _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
     });
 
     test('Crud Operations', (done) => {

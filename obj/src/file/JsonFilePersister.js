@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require('fs');
 const pip_services_commons_node_1 = require("pip-services-commons-node");
 const pip_services_commons_node_2 = require("pip-services-commons-node");
@@ -6,52 +7,50 @@ const pip_services_commons_node_3 = require("pip-services-commons-node");
 const pip_services_commons_node_4 = require("pip-services-commons-node");
 class JsonFilePersister {
     constructor(path) {
-        this.path = path;
+        this._path = path;
     }
-    get path() {
+    getPath() {
         return this._path;
     }
-    set path(value) {
+    setPath(value) {
         this._path = value;
     }
     configure(config) {
         if (config == null || !("path" in config))
             throw new pip_services_commons_node_1.ConfigException(null, "NO_PATH", "Data file path is not set");
-        this.path = config.getAsString("path");
+        this._path = config.getAsString("path");
     }
     load(correlation_id, callback) {
-        if (!fs.existsSync(this.path)) {
-            callback(new pip_services_commons_node_2.FileException(correlation_id, "NOT_FOUND", "File not found: " + this.path), []);
+        if (!fs.existsSync(this._path)) {
+            callback(new pip_services_commons_node_2.FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), []);
             return;
         }
         try {
-            let json = fs.readFileSync(this.path, "utf8");
-            var list = pip_services_commons_node_3.JsonConverter.toNullableMap(json);
-            var arr = pip_services_commons_node_4.ArrayConverter.listToArray(list);
+            let json = fs.readFileSync(this._path, "utf8");
+            let list = pip_services_commons_node_3.JsonConverter.toNullableMap(json);
+            let arr = pip_services_commons_node_4.ArrayConverter.listToArray(list);
             callback(null, arr);
         }
         catch (ex) {
-            var err = new pip_services_commons_node_2.FileException(correlation_id, "READ_FAILED", "Failed to read data file: " + this.path)
+            let err = new pip_services_commons_node_2.FileException(correlation_id, "READ_FAILED", "Failed to read data file: " + this._path)
                 .withCause(ex);
             callback(err, null);
         }
     }
     save(correlation_id, entities, callback) {
         try {
-            var json = pip_services_commons_node_3.JsonConverter.toJson(entities);
-            fs.writeFileSync(this.path, json);
+            let json = pip_services_commons_node_3.JsonConverter.toJson(entities);
+            fs.writeFileSync(this._path, json);
             if (callback)
-                callback();
+                callback(null);
         }
         catch (ex) {
-            var err = new pip_services_commons_node_2.FileException(correlation_id, "WRITE_FAILED", "Failed to write data file: " + this.path)
+            let err = new pip_services_commons_node_2.FileException(correlation_id, "WRITE_FAILED", "Failed to write data file: " + this._path)
                 .withCause(ex);
-            if (callback) {
+            if (callback)
                 callback(err);
-            }
-            else {
+            else
                 throw err;
-            }
         }
     }
 }

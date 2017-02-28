@@ -1,5 +1,11 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.0.0"></a> 2.0.0 (2017-02-27)
+
+### Breaking Changes
+* Migrated to **pip-services** 2.0
+* Separated code persistence from IdentifiablePersistence classes
+
 ## <a name="1.0.0"></a> 1.0.0 (2017-01-28)
 
 Initial public release
@@ -8,9 +14,6 @@ Initial public release
 * **memory** Memory persistence
 * **file** Abstract file and JSON persistence
 * **mongodb** MongoDB persistence
-
-### Breaking Changes
-No breaking changes since this is the first version
 
 ### Bug Fixes
 No fixes in this version

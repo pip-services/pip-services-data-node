@@ -1,31 +1,22 @@
-import { IIdentifiable, IReferenceable, IReferences, IConfigurable, IOpenable, ICleanable } from 'pip-services-commons-node';
+import { IReferenceable } from 'pip-services-commons-node';
+import { IReferences } from 'pip-services-commons-node';
+import { IOpenable } from 'pip-services-commons-node';
+import { ICleanable } from 'pip-services-commons-node';
 import { CompositeLogger } from 'pip-services-commons-node';
-import { ConfigParams } from 'pip-services-commons-node';
-import { IWriter } from '../.';
-import { IGetter } from '../.';
-import { ISetter } from '../.';
 import { ILoader } from '../.';
 import { ISaver } from '../.';
-export declare class MemoryPersistence<T extends IIdentifiable<K>, K> implements IReferenceable, IConfigurable, IOpenable, ICleanable, IWriter<T, K>, IGetter<T, K>, ISetter<T> {
-    private readonly _defaultMaxPageSize;
+export declare class MemoryPersistence<T> implements IReferenceable, IOpenable, ICleanable {
     protected _logger: CompositeLogger;
-    protected _maxPageSize: number;
-    protected _entities: T[];
+    protected _items: T[];
     protected _loader: ILoader<T>;
     protected _saver: ISaver<T>;
     protected _opened: boolean;
     constructor(loader?: ILoader<T>, saver?: ISaver<T>);
     setReferences(references: IReferences): void;
-    configure(config: ConfigParams): void;
     isOpened(): boolean;
-    open(correlationId: string, callback?: (err?: any) => void): void;
+    open(correlationId: string, callback?: (err: any) => void): void;
     private load(correlationId, callback?);
-    close(correlationId: string, callback?: (err?: any) => void): void;
-    save(correlationId: string, callback?: (err?: any) => void): void;
-    getOneById(correlationId: string, id: K, callback: (err: any, data: T) => void): void;
-    create(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
-    set(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
-    update(correlationId: string, entity: T, callback?: (err: any, data: T) => void): void;
-    deleteById(correlationId: string, id: K, callback?: (err: any, data: T) => void): void;
+    close(correlationId: string, callback?: (err: any) => void): void;
+    save(correlationId: string, callback?: (err: any) => void): void;
     clear(correlationId: string, callback?: (err?: any) => void): void;
 }

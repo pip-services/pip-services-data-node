@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const IdentifiableMemoryPersistence_1 = require("../memory/IdentifiableMemoryPersistence");
 const JsonFilePersister_1 = require("./JsonFilePersister");
-const MemoryPersistence_1 = require("../memory/MemoryPersistence");
-class FilePersistence extends MemoryPersistence_1.MemoryPersistence {
+class IdentifiableFilePersistence extends IdentifiableMemoryPersistence_1.IdentifiableMemoryPersistence {
     constructor(persister) {
         if (persister == null)
             persister = new JsonFilePersister_1.JsonFilePersister();
@@ -10,8 +10,9 @@ class FilePersistence extends MemoryPersistence_1.MemoryPersistence {
         this._persister = persister;
     }
     configure(config) {
+        super.configure(config);
         this._persister.configure(config);
     }
 }
-exports.FilePersistence = FilePersistence;
-//# sourceMappingURL=FilePersistence.js.map
+exports.IdentifiableFilePersistence = IdentifiableFilePersistence;
+//# sourceMappingURL=IdentifiableFilePersistence.js.map

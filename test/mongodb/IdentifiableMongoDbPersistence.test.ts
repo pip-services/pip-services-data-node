@@ -1,26 +1,32 @@
-let assert = require('chai').assert;
+var assert = require('chai').assert;
 var async = require('async');
 
-import { FilePersistence } from '../../src/file/FilePersistence';
+import { IdentifiableMongoDbPersistence } from '../../src/mongodb/IdentifiableMongoDbPersistence';
 import { Dummy } from '../Dummy';
+import { DummySchema } from './DummySchema';
+import { YamlConfigReader } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
+import { Schema } from 'mongoose';
 
-suite('FilePersistence', ()=> {
-    
-    var db: FilePersistence<Dummy, string>;
-    var _dummy1: Dummy;
-    var _dummy2: Dummy;
+suite('IdentifiableMongoDbPersistence', ()=> {
+    let db: IdentifiableMongoDbPersistence<Dummy, string>;
+    let _dummy1: Dummy;
+    let _dummy2: Dummy;
 
-    beforeEach(function() {
-        let fileName: string = "../FilePersistenceTest";
+    beforeEach((done) => {
+        let config = YamlConfigReader.readConfig(null, './config/test_connections.yaml');
+        let dbConfig = config.getSection('mongodb');
 
-        db = new FilePersistence<Dummy, string>();
-        db.configure(ConfigParams.fromTuples("path", fileName));
-        db.open(null);
-        db.clear(null);
+        db = new IdentifiableMongoDbPersistence<Dummy, string>("dummies", DummySchema);
+        db.configure(dbConfig);
+        db.open(null, (err: any) => {
+            db.clear(null, (err) => {
+                _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
+                _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
 
-        _dummy1 = { id: null, key: "Key 1", content: "Content 1"};
-        _dummy2 = { id: null, key: "Key 2", content: "Content 2"};
+                done(err);
+            });
+        });
     });
 
     test('Crud Operations', (done) => {

@@ -25,7 +25,7 @@ suite('JsonFilePersister', ()=> {
     test('Configure If Path Key Check Property', () => {
         let fileName: string = "../JsonFilePersisterTest";
         _persister.configure(ConfigParams.fromTuples("path", fileName));
-        assert.equal(fileName, _persister.path);
+        assert.equal(fileName, _persister.getPath());
     });
 
 });
