@@ -132,7 +132,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                 let maxPageSize = this._options.getAsNullableInteger("max_page_size");
                 let debug = this._options.getAsNullableBoolean("debug");
 
-                this._logger.trace(correlationId, "Connecting to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+                this._logger.trace(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
 
                 let uri: string = "mongodb://" + host + (port == null ? "" : ":" + port) + "/" + databaseName;
                 let settings: any;
@@ -160,7 +160,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                         if (err)
                             err = new ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed").withCause(err);
                         else
-                            this._logger.debug(correlationId, "Connected to mongodb database {0}, collection {1}", databaseName, this._collectionName);
+                            this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", databaseName, this._collectionName);
 
                         callback(err);
                     });
@@ -180,7 +180,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
             if (err)
                 err = new ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ') .withCause(err);
             else
-                this._logger.trace(correlationId, "Disconnected from {0} successfully", this._collectionName);
+                this._logger.trace(correlationId, "Disconnected from %s successfully", this._collectionName);
 
             if (callback) callback(err);
         });

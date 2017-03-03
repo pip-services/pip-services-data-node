@@ -11,7 +11,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
     getOneById(correlationId, id, callback) {
         this._model.findById(id, (err, item) => {
             if (!err)
-                this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
+                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collectionName, id);
             item = this.jsonToPublic(item);
             callback(err, item);
         });
@@ -26,7 +26,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         item._id = item.id;
         this._model.create(item, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collectionName, newItem.id);
             newItem = this.jsonToPublic(newItem);
             callback(err, newItem);
         });
@@ -49,7 +49,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         };
         this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Set in %s with id = %s", this._collectionName, item.id);
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
                 callback(err, newItem);
@@ -67,7 +67,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         };
         this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Update in %s with id = %s", this._collectionName, item.id);
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
                 callback(err, newItem);
@@ -77,7 +77,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
     deleteById(correlationId, id, callback) {
         this._model.findByIdAndRemove(id, (err, oldItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
+                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collectionName, id);
             if (callback) {
                 oldItem = this.jsonToPublic(oldItem);
                 callback(err, oldItem);

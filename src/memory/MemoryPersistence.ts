@@ -42,7 +42,7 @@ export class MemoryPersistence<T> implements IReferenceable, IOpenable, ICleanab
             
         this._loader.load(correlationId, (err: any, items: T[]) => {
             this._items = items;
-            this._logger.trace(correlationId, "Loaded {0} of {1}", this._items.length);
+            this._logger.trace(correlationId, "Loaded %d items", this._items.length);
             if (callback) callback(err);
         });
     }
@@ -61,7 +61,7 @@ export class MemoryPersistence<T> implements IReferenceable, IOpenable, ICleanab
         }
 
         let task = this._saver.save(correlationId, this._items, (err: any) => {
-            this._logger.trace(correlationId, "Saved {0} of {1}", this._items.length);
+            this._logger.trace(correlationId, "Saved %d items", this._items.length);
 
             if (callback) callback(err);
         });
@@ -69,7 +69,7 @@ export class MemoryPersistence<T> implements IReferenceable, IOpenable, ICleanab
 
     public clear(correlationId: string, callback?: (err?: any) => void): void {
         this._items = [];
-        this._logger.trace(correlationId, "Cleared {0}");
+        this._logger.trace(correlationId, "Cleared items");
         this.save(correlationId, callback);
     }
 

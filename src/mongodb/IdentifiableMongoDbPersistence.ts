@@ -20,7 +20,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
     public getOneById(correlationId: string, id: K, callback: (err: any, item: T) => void): void {
         this._model.findById(id, (err, item) => {
             if (!err)
-                this._logger.trace(correlationId, "Retrieved from {0} with id = {1}", this._collectionName, id);
+                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collectionName, id);
 
             item = this.jsonToPublic(item);
             callback(err, item);
@@ -40,7 +40,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.create(item, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in {0} with id = {1}", this._collectionName, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collectionName, newItem.id);
 
             newItem = this.jsonToPublic(newItem);
             callback(err, newItem);
@@ -69,7 +69,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         
         this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Set in {0} with id = {1}", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Set in %s with id = %s", this._collectionName, item.id);
            
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
@@ -90,7 +90,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update in {0} with id = {1}", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Update in %s with id = %s", this._collectionName, item.id);
 
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
@@ -102,7 +102,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
     public deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void {
         this._model.findByIdAndRemove(id, (err, oldItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Deleted from {0} with id = {1}", this._collectionName, id);
+                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collectionName, id);
 
             if (callback) {
                 oldItem = this.jsonToPublic(oldItem);
