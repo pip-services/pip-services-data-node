@@ -11,7 +11,7 @@ suite('IdentifiableFilePersistence', ()=> {
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
-    beforeEach(function() {
+    setup(function() {
         let fileName: string = "./data/dummies.json";
 
         db = new IdentifiableFilePersistence<Dummy, string>();

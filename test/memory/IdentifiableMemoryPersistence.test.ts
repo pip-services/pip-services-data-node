@@ -11,7 +11,7 @@ suite('IdentifiableMemoryPersistence', ()=> {
     var _dummy1: Dummy;
     var _dummy2: Dummy;
 
-    beforeEach((done) => {
+    setup((done) => {
         db = new IdentifiableMemoryPersistence<Dummy, string>();
         db.configure(new ConfigParams());
         db.open(null, (err: any) => {

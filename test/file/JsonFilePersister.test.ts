@@ -9,7 +9,7 @@ suite('JsonFilePersister', ()=> {
     
     var _persister: JsonFilePersister<Dummy>;
 
-    beforeEach(function() {
+    setup(function() {
         _persister = new JsonFilePersister<Dummy>();
     });
 

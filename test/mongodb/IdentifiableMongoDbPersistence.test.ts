@@ -13,8 +13,8 @@ suite('IdentifiableMongoDbPersistence', ()=> {
     let _dummy1: Dummy;
     let _dummy2: Dummy;
 
-    beforeEach((done) => {
-        let config = YamlConfigReader.readConfig(null, './config/test_connections.yaml');
+    setup((done) => {
+        let config = YamlConfigReader.readConfig(null, './config/test_connections.yaml.example');
         let dbConfig = config.getSection('mongodb');
 
         db = new IdentifiableMongoDbPersistence<Dummy, string>("dummies", DummySchema);
