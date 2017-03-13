@@ -45,19 +45,19 @@
         "docgen": "typedoc --out doc/api src --mode file --excludeExternals --target ES5 --ignoreCompilerErrors --readme doc/ApiReference.md"
     },
     "dependencies": {
-        "lodash": "*",
-        "async": "*",
-        "mongoose": "*",
+        "lodash":  "^4.17.0",
+        "async":  "^2.1.0",
+        "mongoose": "^4.8.0",
         "pip-services-commons-node": "^2.0.0"
     },
     "devDependencies": {
-        "@types/async": "*",
+        "@types/node": "*",
+        "@types/lodash": "^4.0.0",
+        "@types/async": "^2.0.0",
         "@types/chai": "*",
-        "@types/lodash": "*",
         "@types/mocha": "*",
         "@types/mongodb": "^2.1.38",
         "@types/mongoose": "^4.7.4",
-        "@types/node": "*",
         "chai": "*",
         "matcha": "*",
         "memjs": "*",
