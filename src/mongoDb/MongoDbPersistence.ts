@@ -36,22 +36,21 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
     );
 
     protected _logger: CompositeLogger = new CompositeLogger();
-    protected readonly _collectionName: string;
     protected _connectionResolver: ConnectionResolver = new ConnectionResolver();
     protected _credentialResolver: CredentialResolver = new CredentialResolver();
     protected _options: ConfigParams = new ConfigParams();
 
     protected _connection: any;
-    protected _database: any;
+    protected _database: string;
+    protected _collection: string;
     protected _model: any;
 
-    public constructor(collectionName: string, schema: Schema) {
-        if (collectionName == null)
-            throw new Error("collectionName could not be null");
-
-        this._collectionName = collectionName;
+    public constructor(collection?: string, schema?: Schema) {
         this._connection = createConnection();
-        this._model = this._connection.model(this._collectionName, schema)
+        this._collection = collection;
+        
+        if (collection != null && schema != null)
+            this._model = this._connection.model(collection, schema)
     }
 
     public setReferences(references: IReferences): void {
@@ -105,7 +104,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                 }
 
                 let hosts = '';
-                let databaseName = '';
+                this._database = '';
 
                 for (let index = 0; index < connections.length; index++) {
                     let connection = connections[index];
@@ -128,15 +127,15 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                         hosts += ',';
                     hosts += host + (port == null ? '' : ':' + port);
 
-                    databaseName = connection.getAsNullableString("database");
-                    if (databaseName == null) {
+                    this._database = connection.getAsNullableString("database");
+                    if (this._database == null) {
                         let err = new ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
                         callback(err);
                         return;
                     }
                 }
 
-                let uri: string = "mongodb://" + hosts + "/" + databaseName;
+                let uri: string = "mongodb://" + hosts + "/" + this._database;
 
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
@@ -145,7 +144,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                 let maxPageSize = this._options.getAsNullableInteger("max_page_size");
                 let debug = this._options.getAsNullableBoolean("debug");
 
-                this._logger.debug(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
+                this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
 
                 let settings: any;
 
@@ -172,7 +171,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                         if (err)
                             err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                         else
-                            this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", databaseName, this._collectionName);
+                            this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
 
                         callback(err);
                     });
@@ -190,18 +189,24 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
     public close(correlationId: string, callback?: (err: any) => void): void {
         this._connection.close((err) => {
             if (err)
-                err = new ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ') .withCause(err);
+                err = new ConnectionException(correlationId, 'DISCONNECT_FAILED', 'Disconnect from mongodb failed: ') .withCause(err);
             else
-                this._logger.debug(correlationId, "Disconnected from %s successfully", this._collectionName);
+                this._logger.debug(correlationId, "Disconnected from mongodb database %s", this._database);
 
             if (callback) callback(err);
         });
     }
 
     public clear(correlationId: string, callback?: (err: any) => void): void {
-        this._connection.db.dropCollection(this._collectionName, (err) => {
+        // Return error if collection is not set
+        if (this._collection == null) {
+            if (callback) callback(new Error('Collection name is not defined'));
+            return;
+        }
+
+        this._connection.db.dropCollection(this._collection, (err) => {
             if (err && err.message != "ns not found") {
-                err = new BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
+                err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed")
                     .withCause(err);
             } else if (err && err.message == "ns not found")
                 err = null;

@@ -7,20 +7,18 @@ const pip_services_commons_node_3 = require("pip-services-commons-node");
 const pip_services_commons_node_4 = require("pip-services-commons-node");
 const pip_services_commons_node_5 = require("pip-services-commons-node");
 const pip_services_commons_node_6 = require("pip-services-commons-node");
-const pip_services_commons_node_7 = require("pip-services-commons-node");
 const mongoose_1 = require("mongoose");
 class MongoDbPersistence {
-    constructor(collectionName, schema) {
+    constructor(collection, schema) {
         this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.poll_size", 4, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
         this._logger = new pip_services_commons_node_1.CompositeLogger();
         this._connectionResolver = new pip_services_commons_node_3.ConnectionResolver();
         this._credentialResolver = new pip_services_commons_node_4.CredentialResolver();
         this._options = new pip_services_commons_node_2.ConfigParams();
-        if (collectionName == null)
-            throw new Error("collectionName could not be null");
-        this._collectionName = collectionName;
         this._connection = mongoose_1.createConnection();
-        this._model = this._connection.model(this._collectionName, schema);
+        this._collection = collection;
+        if (collection != null && schema != null)
+            this._model = this._connection.model(collection, schema);
     }
     setReferences(references) {
         this._logger.setReferences(references);
@@ -65,7 +63,7 @@ class MongoDbPersistence {
                     return;
                 }
                 let hosts = '';
-                let databaseName = '';
+                this._database = '';
                 for (let index = 0; index < connections.length; index++) {
                     let connection = connections[index];
                     let host = connection.getHost();
@@ -83,21 +81,21 @@ class MongoDbPersistence {
                     if (hosts.length > 0)
                         hosts += ',';
                     hosts += host + (port == null ? '' : ':' + port);
-                    databaseName = connection.getAsNullableString("database");
-                    if (databaseName == null) {
+                    this._database = connection.getAsNullableString("database");
+                    if (this._database == null) {
                         let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
                         callback(err);
                         return;
                     }
                 }
-                let uri = "mongodb://" + hosts + "/" + databaseName;
+                let uri = "mongodb://" + hosts + "/" + this._database;
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
                 let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
                 let autoReconnect = this._options.getAsNullableBoolean("auto_reconnect");
                 let maxPageSize = this._options.getAsNullableInteger("max_page_size");
                 let debug = this._options.getAsNullableBoolean("debug");
-                this._logger.debug(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
+                this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
                 let settings;
                 try {
                     settings = {
@@ -120,7 +118,7 @@ class MongoDbPersistence {
                         if (err)
                             err = new pip_services_commons_node_6.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                         else
-                            this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", databaseName, this._collectionName);
+                            this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
                         callback(err);
                     });
                 }
@@ -137,17 +135,23 @@ class MongoDbPersistence {
     close(correlationId, callback) {
         this._connection.close((err) => {
             if (err)
-                err = new pip_services_commons_node_6.ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ').withCause(err);
+                err = new pip_services_commons_node_6.ConnectionException(correlationId, 'DISCONNECT_FAILED', 'Disconnect from mongodb failed: ').withCause(err);
             else
-                this._logger.debug(correlationId, "Disconnected from %s successfully", this._collectionName);
+                this._logger.debug(correlationId, "Disconnected from mongodb database %s", this._database);
             if (callback)
                 callback(err);
         });
     }
     clear(correlationId, callback) {
-        this._connection.db.dropCollection(this._collectionName, (err) => {
+        // Return error if collection is not set
+        if (this._collection == null) {
+            if (callback)
+                callback(new Error('Collection name is not defined'));
+            return;
+        }
+        this._connection.db.dropCollection(this._collection, (err) => {
             if (err && err.message != "ns not found") {
-                err = new pip_services_commons_node_7.BadRequestException(correlationId, "DropCollectionFailed", "Connection to mongodb failed")
+                err = new pip_services_commons_node_6.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed")
                     .withCause(err);
             }
             else if (err && err.message == "ns not found")

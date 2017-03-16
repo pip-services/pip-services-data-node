@@ -1,17 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var async = require('async');
+let async = require('async');
 const pip_services_commons_node_1 = require("pip-services-commons-node");
 const pip_services_commons_node_2 = require("pip-services-commons-node");
 const MongoDbPersistence_1 = require("./MongoDbPersistence");
 class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersistence {
-    constructor(collectionName, schema) {
-        super(collectionName, schema);
+    constructor(collection, schema) {
+        if (collection == null)
+            throw new Error("Collection name could not be null");
+        if (schema == null)
+            throw new Error("Schema could not be null");
+        super(collection, schema);
     }
     getOneById(correlationId, id, callback) {
         this._model.findById(id, (err, item) => {
             if (!err)
-                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collectionName, id);
+                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collection, id);
             item = this.jsonToPublic(item);
             callback(err, item);
         });
@@ -26,7 +30,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         item._id = item.id;
         this._model.create(item, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in %s with id = %s", this._collectionName, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem.id);
             newItem = this.jsonToPublic(newItem);
             callback(err, newItem);
         });
@@ -49,7 +53,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         };
         this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Set in %s with id = %s", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Set in %s with id = %s", this._collection, item.id);
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
                 callback(err, newItem);
@@ -67,7 +71,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         };
         this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update in %s with id = %s", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Update in %s with id = %s", this._collection, item.id);
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
                 callback(err, newItem);
@@ -77,7 +81,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
     deleteById(correlationId, id, callback) {
         this._model.findByIdAndRemove(id, (err, oldItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collectionName, id);
+                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collection, id);
             if (callback) {
                 oldItem = this.jsonToPublic(oldItem);
                 callback(err, oldItem);

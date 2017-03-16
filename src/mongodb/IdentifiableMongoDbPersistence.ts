@@ -1,4 +1,4 @@
-var async = require('async');
+let async = require('async');
 
 import { IIdentifiable } from 'pip-services-commons-node';
 import { IStringIdentifiable } from 'pip-services-commons-node';
@@ -13,14 +13,19 @@ import { IWriter, IGetter, ISetter } from '../.';
 export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> extends MongoDbPersistence<T> 
     implements IWriter<T, K>, IGetter<T, K>, ISetter<T> {
 
-    public constructor(collectionName: string, schema: Schema) {
-        super(collectionName, schema);
+    public constructor(collection: string, schema: Schema) {
+        if (collection == null)
+            throw new Error("Collection name could not be null");
+        if (schema == null)
+            throw new Error("Schema could not be null");
+
+        super(collection, schema);
     }
 
     public getOneById(correlationId: string, id: K, callback: (err: any, item: T) => void): void {
         this._model.findById(id, (err, item) => {
             if (!err)
-                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collectionName, id);
+                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collection, id);
 
             item = this.jsonToPublic(item);
             callback(err, item);
@@ -40,7 +45,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.create(item, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in %s with id = %s", this._collectionName, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem.id);
 
             newItem = this.jsonToPublic(newItem);
             callback(err, newItem);
@@ -69,7 +74,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         
         this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Set in %s with id = %s", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Set in %s with id = %s", this._collection, item.id);
            
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
@@ -90,7 +95,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update in %s with id = %s", this._collectionName, item.id);
+                this._logger.trace(correlationId, "Update in %s with id = %s", this._collection, item.id);
 
             if (callback) {
                 newItem = this.jsonToPublic(newItem);
@@ -102,7 +107,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
     public deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void {
         this._model.findByIdAndRemove(id, (err, oldItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collectionName, id);
+                this._logger.trace(correlationId, "Deleted from %s with id = %s", this._collection, id);
 
             if (callback) {
                 oldItem = this.jsonToPublic(oldItem);

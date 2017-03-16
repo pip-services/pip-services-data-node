@@ -1,6 +1,6 @@
 {
     "name": "pip-services-data-node",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "author": "Conceptual Vision Consulting LLC",
     "description": "Data processing and persistence components for Pip.Services in Node.js",
     "contributors": [
@@ -11,10 +11,6 @@
         {
             "name": "Volodymyr Tkachenko",
             "email": "vovantigo@gmail.com"
-        },
-        {
-            "name": "Mark Zontak",
-            "email": "mark@zontak.me"
         }
     ],
     "main": "./obj/src/index.js",
