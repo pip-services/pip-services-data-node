@@ -1,4 +1,4 @@
-var async = require('async');
+let async = require('async');
 
 import { IIdentifiable } from 'pip-services-commons-node';
 import { IStringIdentifiable } from 'pip-services-commons-node';
@@ -81,13 +81,13 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
     }
 
     public open(correlationId: string, callback?: (err: any) => void): void {
-        let connection: ConnectionParams;
+        let connections: ConnectionParams[];
         let credential: CredentialParams;
 
         async.series([
             (callback) => {
-                this._connectionResolver.resolve(correlationId, (err: any, result: ConnectionParams) => {
-                    connection = result;
+                this._connectionResolver.resolveAll(correlationId, (err: any, result: ConnectionParams[]) => {
+                    connections = result;
                     callback(err);
                 });
             },
@@ -98,32 +98,45 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                 });
             },
             (callback) => {
-                if (connection == null) {
+                if (connections == null && connections.length == 0) {
                     let err = new ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
                     callback(err);
                     return;
                 }
 
-                let host = connection.getHost();
-                if (host == null) {
-                    let err = new ConfigException(correlationId, "NO_HOST", "Connection host is not set");
-                    callback(err);
-                    return;
+                let hosts = '';
+                let databaseName = '';
+
+                for (let index = 0; index < connections.length; index++) {
+                    let connection = connections[index];
+
+                    let host = connection.getHost();
+                    if (host == null) {
+                        let err = new ConfigException(correlationId, "NO_HOST", "Connection host is not set");
+                        callback(err);
+                        return;
+                    }
+
+                    let port = connection.getPort();
+                    if (port == 0) {
+                        let err = new ConfigException(correlationId, "NO_PORT", "Connection port is not set");
+                        callback(err);
+                        return;
+                    }
+
+                    if (hosts.length > 0)
+                        hosts += ',';
+                    hosts += host + (port == null ? '' : ':' + port);
+
+                    databaseName = connection.getAsNullableString("database");
+                    if (databaseName == null) {
+                        let err = new ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
+                        callback(err);
+                        return;
+                    }
                 }
 
-                let port = connection.getPort();
-                if (port == 0) {
-                    let err = new ConfigException(correlationId, "NO_PORT", "Connection port is not set");
-                    callback(err);
-                    return;
-                }
-
-                let databaseName = connection.getAsNullableString("database");
-                if (databaseName == null) {
-                    let err = new ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
-                    callback(err);
-                    return;
-                }
+                let uri: string = "mongodb://" + hosts + "/" + databaseName;
 
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
@@ -132,9 +145,8 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
                 let maxPageSize = this._options.getAsNullableInteger("max_page_size");
                 let debug = this._options.getAsNullableBoolean("debug");
 
-                this._logger.trace(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
+                this._logger.debug(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
 
-                let uri: string = "mongodb://" + host + (port == null ? "" : ":" + port) + "/" + databaseName;
                 let settings: any;
 
                 try {
@@ -158,14 +170,14 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
 
                     this._connection.open(uri, settings, (err) => {
                         if (err)
-                            err = new ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed").withCause(err);
+                            err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                         else
                             this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", databaseName, this._collectionName);
 
                         callback(err);
                     });
                 } catch (ex) {
-                    let err = new ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed").withCause(ex);
+                    let err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(ex);
 
                     callback(err);
                 }
@@ -180,7 +192,7 @@ export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOp
             if (err)
                 err = new ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ') .withCause(err);
             else
-                this._logger.trace(correlationId, "Disconnected from %s successfully", this._collectionName);
+                this._logger.debug(correlationId, "Disconnected from %s successfully", this._collectionName);
 
             if (callback) callback(err);
         });

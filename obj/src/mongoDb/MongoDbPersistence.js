@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var async = require('async');
+let async = require('async');
 const pip_services_commons_node_1 = require("pip-services-commons-node");
 const pip_services_commons_node_2 = require("pip-services-commons-node");
 const pip_services_commons_node_3 = require("pip-services-commons-node");
@@ -43,12 +43,12 @@ class MongoDbPersistence {
         return this._connection.readyState == 1;
     }
     open(correlationId, callback) {
-        let connection;
+        let connections;
         let credential;
         async.series([
             (callback) => {
-                this._connectionResolver.resolve(correlationId, (err, result) => {
-                    connection = result;
+                this._connectionResolver.resolveAll(correlationId, (err, result) => {
+                    connections = result;
                     callback(err);
                 });
             },
@@ -59,37 +59,45 @@ class MongoDbPersistence {
                 });
             },
             (callback) => {
-                if (connection == null) {
+                if (connections == null && connections.length == 0) {
                     let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
                     callback(err);
                     return;
                 }
-                let host = connection.getHost();
-                if (host == null) {
-                    let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_HOST", "Connection host is not set");
-                    callback(err);
-                    return;
+                let hosts = '';
+                let databaseName = '';
+                for (let index = 0; index < connections.length; index++) {
+                    let connection = connections[index];
+                    let host = connection.getHost();
+                    if (host == null) {
+                        let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_HOST", "Connection host is not set");
+                        callback(err);
+                        return;
+                    }
+                    let port = connection.getPort();
+                    if (port == 0) {
+                        let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_PORT", "Connection port is not set");
+                        callback(err);
+                        return;
+                    }
+                    if (hosts.length > 0)
+                        hosts += ',';
+                    hosts += host + (port == null ? '' : ':' + port);
+                    databaseName = connection.getAsNullableString("database");
+                    if (databaseName == null) {
+                        let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
+                        callback(err);
+                        return;
+                    }
                 }
-                let port = connection.getPort();
-                if (port == 0) {
-                    let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_PORT", "Connection port is not set");
-                    callback(err);
-                    return;
-                }
-                let databaseName = connection.getAsNullableString("database");
-                if (databaseName == null) {
-                    let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
-                    callback(err);
-                    return;
-                }
+                let uri = "mongodb://" + hosts + "/" + databaseName;
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
                 let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
                 let autoReconnect = this._options.getAsNullableBoolean("auto_reconnect");
                 let maxPageSize = this._options.getAsNullableInteger("max_page_size");
                 let debug = this._options.getAsNullableBoolean("debug");
-                this._logger.trace(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
-                let uri = "mongodb://" + host + (port == null ? "" : ":" + port) + "/" + databaseName;
+                this._logger.debug(correlationId, "Connecting to mongodb database %s, collection %s", databaseName, this._collectionName);
                 let settings;
                 try {
                     settings = {
@@ -110,14 +118,14 @@ class MongoDbPersistence {
                     }
                     this._connection.open(uri, settings, (err) => {
                         if (err)
-                            err = new pip_services_commons_node_6.ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed").withCause(err);
+                            err = new pip_services_commons_node_6.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                         else
                             this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", databaseName, this._collectionName);
                         callback(err);
                     });
                 }
                 catch (ex) {
-                    let err = new pip_services_commons_node_6.ConnectionException(correlationId, "ConnectFailed", "Connection to mongodb failed").withCause(ex);
+                    let err = new pip_services_commons_node_6.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(ex);
                     callback(err);
                 }
             }
@@ -131,7 +139,7 @@ class MongoDbPersistence {
             if (err)
                 err = new pip_services_commons_node_6.ConnectionException(correlationId, 'DisconnectFailed', 'Disconnect from mongodb failed: ').withCause(err);
             else
-                this._logger.trace(correlationId, "Disconnected from %s successfully", this._collectionName);
+                this._logger.debug(correlationId, "Disconnected from %s successfully", this._collectionName);
             if (callback)
                 callback(err);
         });
