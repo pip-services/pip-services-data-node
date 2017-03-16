@@ -10,7 +10,7 @@ const pip_services_commons_node_6 = require("pip-services-commons-node");
 const mongoose_1 = require("mongoose");
 class MongoDbPersistence {
     constructor(collection, schema) {
-        this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.poll_size", 4, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
+        this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.poll_size", 2, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
         this._logger = new pip_services_commons_node_1.CompositeLogger();
         this._connectionResolver = new pip_services_commons_node_3.ConnectionResolver();
         this._credentialResolver = new pip_services_commons_node_4.CredentialResolver();
@@ -63,9 +63,13 @@ class MongoDbPersistence {
                     return;
                 }
                 let hosts = '';
+                let uri = null;
                 this._database = '';
                 for (let index = 0; index < connections.length; index++) {
                     let connection = connections[index];
+                    uri = connection.getUri();
+                    if (uri != null)
+                        break;
                     let host = connection.getHost();
                     if (host == null) {
                         let err = new pip_services_commons_node_5.ConfigException(correlationId, "NO_HOST", "Connection host is not set");
@@ -88,7 +92,8 @@ class MongoDbPersistence {
                         return;
                     }
                 }
-                let uri = "mongodb://" + hosts + "/" + this._database;
+                if (uri == null)
+                    uri = "mongodb://" + hosts + "/" + this._database;
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
                 let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");

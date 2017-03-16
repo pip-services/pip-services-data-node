@@ -27,7 +27,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
         "connection.host", "localhost",
         "connection.port", 27017,
 
-        "options.poll_size", 4,
+        "options.poll_size", 2,
         "options.keep_alive", 1,
         "options.connect_timeout", 5000,
         "options.auto_reconnect", true,
@@ -104,10 +104,14 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 }
 
                 let hosts = '';
+                let uri: string = null;
                 this._database = '';
 
                 for (let index = 0; index < connections.length; index++) {
                     let connection = connections[index];
+
+                    uri = connection.getUri();
+                    if (uri != null) break;
 
                     let host = connection.getHost();
                     if (host == null) {
@@ -135,7 +139,8 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                     }
                 }
 
-                let uri: string = "mongodb://" + hosts + "/" + this._database;
+                if (uri == null)
+                    uri = "mongodb://" + hosts + "/" + this._database;
 
                 let pollSize = this._options.getAsNullableInteger("poll_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
