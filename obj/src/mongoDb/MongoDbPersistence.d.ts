@@ -8,7 +8,7 @@ import { ConfigParams } from 'pip-services-commons-node';
 import { ConnectionResolver } from 'pip-services-commons-node';
 import { CredentialResolver } from 'pip-services-commons-node';
 import { Schema } from "mongoose";
-export declare class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOpenable, ICleanable {
+export declare class MongoDbPersistence implements IReferenceable, IConfigurable, IOpenable, ICleanable {
     private _defaultConfig;
     protected _logger: CompositeLogger;
     protected _connectionResolver: ConnectionResolver;

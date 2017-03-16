@@ -5,6 +5,14 @@
 ### Features
 * **mongodb** Added support for cluster connections
 
+## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
+
+### Features
+* **mongodb** Added support to mongodb clusters
+
+### Bug fixes
+* Removed generics from MongoDbPersistence
+
 ## <a name="2.0.0"></a> 2.0.0 (2017-02-27)
 
 ### Breaking Changes

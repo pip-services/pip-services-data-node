@@ -19,7 +19,7 @@ import { BadRequestException } from 'pip-services-commons-node';
 
 import { Document, Model, Schema, createConnection, model } from "mongoose";
 
-export class MongoDbPersistence<T> implements IReferenceable, IConfigurable, IOpenable, ICleanable {
+export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpenable, ICleanable {
 
     private _defaultConfig: ConfigParams = ConfigParams.fromTuples(
         "connection.type", "mongodb",

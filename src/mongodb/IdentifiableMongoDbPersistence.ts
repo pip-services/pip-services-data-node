@@ -10,7 +10,7 @@ import { Document, Model, Schema } from "mongoose";
 import { MongoDbPersistence } from './MongoDbPersistence';
 import { IWriter, IGetter, ISetter } from '../.';
 
-export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> extends MongoDbPersistence<T> 
+export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> extends MongoDbPersistence
     implements IWriter<T, K>, IGetter<T, K>, ISetter<T> {
 
     public constructor(collection: string, schema: Schema) {
