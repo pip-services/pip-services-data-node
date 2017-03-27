@@ -22,7 +22,7 @@ export declare class MongoDbPersistence implements IReferenceable, IConfigurable
     constructor(collection?: string, schema?: Schema);
     setReferences(references: IReferences): void;
     configure(config: ConfigParams): void;
-    protected jsonToPublic(value: any): any;
+    protected convertToPublic(value: any): any;
     isOpened(): boolean;
     open(correlationId: string, callback?: (err: any) => void): void;
     close(correlationId: string, callback?: (err: any) => void): void;

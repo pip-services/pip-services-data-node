@@ -5,8 +5,13 @@
 ### Features
 * **mongodb** Added support for cluster connections
 
-## <a name="2.0.5"></a> 2.0.7 (2017-03-26)
+## <a name="2.0.8"></a> 2.0.8 (2017-03-26)
+
+### Features
 * **mongodb** Made collection name configurable
+* **mongodb** Added protected GetPageByFilter, GetListByFilter and GetRandomOne methods to IndentifiableMongoDbPersistence
+* **memory** Added protected GetPageByFilter, GetListByFilter and GetRandomOne methods to IndentifiableMemoryPersistence
+* **tests** Reimplemented persistence tests
 
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 

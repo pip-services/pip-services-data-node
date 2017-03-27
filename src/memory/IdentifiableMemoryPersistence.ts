@@ -1,7 +1,11 @@
+let _ = require('lodash');
+
 import { IIdentifiable } from 'pip-services-commons-node';
 import { IConfigurable } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
+import { PagingParams } from 'pip-services-commons-node';
 import { SortParams } from 'pip-services-commons-node';
+import { DataPage } from 'pip-services-commons-node';
 import { ObjectWriter } from 'pip-services-commons-node';
 import { IdGenerator } from 'pip-services-commons-node';
 import { NotFoundException } from 'pip-services-commons-node';
@@ -16,9 +20,7 @@ import { ISaver } from '../.';
 
 export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extends MemoryPersistence<T> 
     implements IConfigurable, IWriter<T, K>, IGetter<T, K>, ISetter<T> {
-    private readonly _defaultMaxPageSize: number = 100;
-
-    protected _maxPageSize: number = this._defaultMaxPageSize;
+    protected _maxPageSize: number = 100;
 
     public constructor(loader?: ILoader<T>, saver?: ISaver<T>) {
         super(loader, saver);
@@ -26,6 +28,74 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
 
     public configure(config: ConfigParams): void {
         this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+    }
+
+    protected getPageByFilter(correlationId: string, filter: any, 
+        paging: PagingParams, sort: any, select: any, 
+        callback: (err: any, page: DataPage<T>) => void): void {
+        
+        let items = this._items;
+
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(items, filter);
+
+        // Extract a page
+        paging = paging != null ? paging : new PagingParams();
+        let skip = paging.getSkip(-1);
+        let take = paging.getTake(this._maxPageSize);
+
+        let total = null;
+        if (paging.total)
+            total = items.length;
+        
+        if (skip > 0)
+            items = _.slice(items, skip);
+        items = _.take(items, take);
+
+        // Apply sorting
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
+        
+        this._logger.trace(correlationId, "Retrieved %d items", items.length);
+        
+        let page = new DataPage<T>(items, total);
+        callback(null, page);
+    }
+
+    protected getListByFilter(correlationId: string, filter: any, sort: any, select: any,
+        callback: (err: any, items: T[]) => void): void {
+        
+        let items = this._items;
+
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(filter);
+
+        // Apply sorting
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
+        
+        this._logger.trace(correlationId, "Retrieved %d items", items.length);
+        
+        callback(null, items);
+    }
+
+    protected getOneRandom(correlationId: string, filter: any, callback: (err: any, item: T) => void): void {
+        let items = this._items;
+
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(filter);
+
+        let item: T = items.length > 0 ? _.sample(items) : null;
+        
+        if (item != null)
+            this._logger.trace(correlationId, "Retrieved a random item");
+        else
+            this._logger.trace(correlationId, "Nothing to return as random item");
+                        
+        callback(null, item);
     }
 
     public getOneById(correlationId: string, id: K, callback: (err: any, item: T) => void): void {

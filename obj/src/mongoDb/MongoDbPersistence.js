@@ -41,7 +41,7 @@ class MongoDbPersistence {
         this._options = this._options.override(config.getSection("options"));
     }
     // Convert object to JSON format
-    jsonToPublic(value) {
+    convertToPublic(value) {
         if (value && value.toJSON)
             value = value.toJSON();
         return value;

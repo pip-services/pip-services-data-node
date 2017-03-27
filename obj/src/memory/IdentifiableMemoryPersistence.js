@@ -1,16 +1,63 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+let _ = require('lodash');
 const pip_services_commons_node_1 = require("pip-services-commons-node");
 const pip_services_commons_node_2 = require("pip-services-commons-node");
+const pip_services_commons_node_3 = require("pip-services-commons-node");
+const pip_services_commons_node_4 = require("pip-services-commons-node");
 const MemoryPersistence_1 = require("./MemoryPersistence");
 class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistence {
     constructor(loader, saver) {
         super(loader, saver);
-        this._defaultMaxPageSize = 100;
-        this._maxPageSize = this._defaultMaxPageSize;
+        this._maxPageSize = 100;
     }
     configure(config) {
         this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+    }
+    getPageByFilter(correlationId, filter, paging, sort, select, callback) {
+        let items = this._items;
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(items, filter);
+        // Extract a page
+        paging = paging != null ? paging : new pip_services_commons_node_1.PagingParams();
+        let skip = paging.getSkip(-1);
+        let take = paging.getTake(this._maxPageSize);
+        let total = null;
+        if (paging.total)
+            total = items.length;
+        if (skip > 0)
+            items = _.slice(items, skip);
+        items = _.take(items, take);
+        // Apply sorting
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
+        this._logger.trace(correlationId, "Retrieved %d items", items.length);
+        let page = new pip_services_commons_node_2.DataPage(items, total);
+        callback(null, page);
+    }
+    getListByFilter(correlationId, filter, sort, select, callback) {
+        let items = this._items;
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(filter);
+        // Apply sorting
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
+        this._logger.trace(correlationId, "Retrieved %d items", items.length);
+        callback(null, items);
+    }
+    getOneRandom(correlationId, filter, callback) {
+        let items = this._items;
+        // Apply filter
+        if (_.isFunction(filter))
+            items = _.filter(filter);
+        let item = items.length > 0 ? _.sample(items) : null;
+        if (item != null)
+            this._logger.trace(correlationId, "Retrieved a random item");
+        else
+            this._logger.trace(correlationId, "Nothing to return as random item");
+        callback(null, item);
     }
     getOneById(correlationId, id, callback) {
         let items = this._items.filter((x) => { return x.id == id; });
@@ -28,7 +75,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             return;
         }
         if (item.id == null) {
-            pip_services_commons_node_1.ObjectWriter.setProperty(item, "id", pip_services_commons_node_2.IdGenerator.nextLong());
+            pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
         }
         this._items.push(item);
         this._logger.trace(correlationId, "Created %s", item);
@@ -44,7 +91,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             return;
         }
         if (item.id == null) {
-            pip_services_commons_node_1.ObjectWriter.setProperty(item, "id", pip_services_commons_node_2.IdGenerator.nextLong());
+            pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
         }
         let index = this._items.map((x) => { return x.id; }).indexOf(item.id);
         if (index < 0)

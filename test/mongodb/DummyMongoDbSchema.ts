@@ -1,7 +1,6 @@
 import { Schema } from "mongoose";
 
-export let DummyMongoDbSchema = function(collection?: string): Schema {
-    collection = collection || 'dummies';
+export let DummyMongoDbSchema = function(): Schema {
 
     let schema: Schema = new Schema(
         {
@@ -10,7 +9,6 @@ export let DummyMongoDbSchema = function(collection?: string): Schema {
             content: { type: String, required: false }
         },
         {
-            collection: collection,
             autoIndex: true
         }
     );

@@ -81,7 +81,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     }
 
     // Convert object to JSON format
-    protected jsonToPublic(value: any): any {
+    protected convertToPublic(value: any): any {
         if (value && value.toJSON)
             value = value.toJSON();
         return value;
