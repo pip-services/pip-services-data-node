@@ -13,7 +13,7 @@ export class DummyMongoDbPersistence
     implements IDummyPersistence
 {
     public constructor() {
-        super('dummy', DummyMongoDbSchema());
+        super('dummies', DummyMongoDbSchema());
     }
 
     public getPageByFilter(correlationId: string, filter: FilterParams, paging: PagingParams, 

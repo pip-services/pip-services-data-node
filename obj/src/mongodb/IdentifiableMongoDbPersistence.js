@@ -103,9 +103,10 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             callback(null, null);
             return;
         }
-        if (item.id == null)
-            pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
-        item._id = item.id;
+        // Assign unique id
+        item._id = item.id || pip_services_commons_node_4.IdGenerator.nextLong();
+        // Remove id field
+        delete item.id;
         this._model.create(item, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem.id);

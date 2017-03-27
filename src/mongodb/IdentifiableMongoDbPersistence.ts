@@ -132,10 +132,11 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             return;
         }
 
-        if (item.id == null)
-            ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
+        // Assign unique id
+        (item as any)._id = item.id || IdGenerator.nextLong();
 
-        (item as any)._id = item.id;
+        // Remove id field
+        delete item.id;
 
         this._model.create(item, (err, newItem) => {
             if (!err)
