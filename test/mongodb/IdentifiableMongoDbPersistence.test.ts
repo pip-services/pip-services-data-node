@@ -3,7 +3,7 @@ var async = require('async');
 
 import { IdentifiableMongoDbPersistence } from '../../src/mongodb/IdentifiableMongoDbPersistence';
 import { Dummy } from '../Dummy';
-import { DummySchema } from './DummySchema';
+import { DummyMongoDbSchema } from './DummyMongoDbSchema';
 import { YamlConfigReader } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
 import { Schema } from 'mongoose';
@@ -17,7 +17,7 @@ suite('IdentifiableMongoDbPersistence', ()=> {
         let config = YamlConfigReader.readConfig(null, './config/test_connections.yaml');
         let dbConfig = config.getSection('mongodb');
 
-        db = new IdentifiableMongoDbPersistence<Dummy, string>("dummies", DummySchema);
+        db = new IdentifiableMongoDbPersistence<Dummy, string>("dummies", DummyMongoDbSchema());
         db.configure(dbConfig);
         db.open(null, (err: any) => {
             db.clear(null, (err) => {

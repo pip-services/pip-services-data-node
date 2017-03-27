@@ -9,20 +9,22 @@ class JsonFilePersister {
     constructor(path) {
         this._path = path;
     }
-    getPath() {
+    get path() {
         return this._path;
     }
-    setPath(value) {
+    set path(value) {
         this._path = value;
     }
     configure(config) {
-        if (config == null || !("path" in config))
-            throw new pip_services_commons_node_1.ConfigException(null, "NO_PATH", "Data file path is not set");
-        this._path = config.getAsString("path");
+        this._path = config.getAsStringWithDefault("path", this._path);
     }
     load(correlation_id, callback) {
+        if (this._path == null) {
+            callback(new pip_services_commons_node_1.ConfigException(null, "NO_PATH", "Data file path is not set"), null);
+            return;
+        }
         if (!fs.existsSync(this._path)) {
-            callback(new pip_services_commons_node_2.FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), []);
+            callback(new pip_services_commons_node_2.FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), null);
             return;
         }
         try {

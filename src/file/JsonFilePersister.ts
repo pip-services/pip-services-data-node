@@ -8,8 +8,8 @@ import { FileException } from 'pip-services-commons-node';
 import { JsonConverter } from 'pip-services-commons-node';
 import { ArrayConverter } from 'pip-services-commons-node';
 
-import { ILoader } from '../.';
-import { ISaver } from '../.';
+import { ILoader } from '../ILoader';
+import { ISaver } from '../ISaver';
 
 export class JsonFilePersister<T> implements ILoader<T>, ISaver<T>, IConfigurable {
     private _path: string;
@@ -18,24 +18,26 @@ export class JsonFilePersister<T> implements ILoader<T>, ISaver<T>, IConfigurabl
         this._path = path;
     }
 
-    public getPath(): string {
+    public get path(): string {
         return this._path;
     }
 
-    public setPath(value: string) {
+    public set path(value: string) {
         this._path = value;
     }
 
     public configure(config: ConfigParams): void {
-        if (config == null || !("path" in config))
-            throw new ConfigException(null, "NO_PATH", "Data file path is not set");
-
-        this._path = config.getAsString("path");
+        this._path = config.getAsStringWithDefault("path", this._path);
     }
 
     public load(correlation_id: string, callback: (err: any, data: T[]) => void): void {
+        if (this._path == null) {
+            callback(new ConfigException(null, "NO_PATH", "Data file path is not set"), null);
+            return;
+        }
+
         if (!fs.existsSync(this._path)) {
-            callback(new FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), []);
+            callback(new FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), null);
             return;
         }
 

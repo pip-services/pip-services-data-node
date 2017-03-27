@@ -18,6 +18,7 @@ export declare class MongoDbPersistence implements IReferenceable, IConfigurable
     protected _database: string;
     protected _collection: string;
     protected _model: any;
+    protected _schema: Schema;
     constructor(collection?: string, schema?: Schema);
     setReferences(references: IReferences): void;
     configure(config: ConfigParams): void;

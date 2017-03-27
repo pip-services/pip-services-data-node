@@ -27,6 +27,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
         "connection.host", "localhost",
         "connection.port", 27017,
 
+        "options.collection", null,
         "options.poll_size", 2,
         "options.keep_alive", 1,
         "options.connect_timeout", 5000,
@@ -44,13 +45,17 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     protected _database: string;
     protected _collection: string;
     protected _model: any;
+    protected _schema: Schema;
 
     public constructor(collection?: string, schema?: Schema) {
         this._connection = createConnection();
         this._collection = collection;
+        this._schema = schema;
         
-        if (collection != null && schema != null)
-            this._model = this._connection.model(collection, schema)
+        if (collection != null && schema != null) {
+            schema.set('collection', collection);
+            this._model = this._connection.model(collection, schema);
+        }
     }
 
     public setReferences(references: IReferences): void {
@@ -64,6 +69,13 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
 
         this._connectionResolver.configure(config, true);
         this._credentialResolver.configure(config, true);
+
+        let collection = config.getAsStringWithDefault('collection', this._collection);
+        if (collection != this._collection && this._schema != null) {
+            this._collection = collection;
+            this._schema.set('collection', collection);
+            this._model = this._model = this._connection.model(collection, this._schema);
+        }
 
         this._options = this._options.override(config.getSection("options"));
     }

@@ -10,15 +10,18 @@ const pip_services_commons_node_6 = require("pip-services-commons-node");
 const mongoose_1 = require("mongoose");
 class MongoDbPersistence {
     constructor(collection, schema) {
-        this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.poll_size", 2, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
+        this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("connection.type", "mongodb", "connection.database", "test", "connection.host", "localhost", "connection.port", 27017, "options.collection", null, "options.poll_size", 2, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
         this._logger = new pip_services_commons_node_1.CompositeLogger();
         this._connectionResolver = new pip_services_commons_node_3.ConnectionResolver();
         this._credentialResolver = new pip_services_commons_node_4.CredentialResolver();
         this._options = new pip_services_commons_node_2.ConfigParams();
         this._connection = mongoose_1.createConnection();
         this._collection = collection;
-        if (collection != null && schema != null)
+        this._schema = schema;
+        if (collection != null && schema != null) {
+            schema.set('collection', collection);
             this._model = this._connection.model(collection, schema);
+        }
     }
     setReferences(references) {
         this._logger.setReferences(references);
@@ -29,6 +32,12 @@ class MongoDbPersistence {
         config = config.setDefaults(this._defaultConfig);
         this._connectionResolver.configure(config, true);
         this._credentialResolver.configure(config, true);
+        let collection = config.getAsStringWithDefault('collection', this._collection);
+        if (collection != this._collection && this._schema != null) {
+            this._collection = collection;
+            this._schema.set('collection', collection);
+            this._model = this._model = this._connection.model(collection, this._schema);
+        }
         this._options = this._options.override(config.getSection("options"));
     }
     // Convert object to JSON format

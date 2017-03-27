@@ -5,6 +5,9 @@
 ### Features
 * **mongodb** Added support for cluster connections
 
+## <a name="2.0.5"></a> 2.0.7 (2017-03-26)
+* **mongodb** Made collection name configurable
+
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 
 ### Features
