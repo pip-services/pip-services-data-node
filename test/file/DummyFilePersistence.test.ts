@@ -7,16 +7,19 @@ suite('DummyFilePersistence', ()=> {
     let persistence: DummyFilePersistence;
     let fixture: DummyPersistenceFixture;
  
-    setup(function() {
-        persistence = new DummyFilePersistence();
-        persistence.configure(ConfigParams.fromTuples(
-            "path", "./data/dummies.json"
-        ));
+    setup(function(done) {
+        persistence = new DummyFilePersistence('./data/dummies.json');
 
         fixture = new DummyPersistenceFixture(persistence);
 
-        persistence.open(null);
-        persistence.clear(null);
+        persistence.open(null, (err) => {
+            if (err) done(err);
+            else persistence.clear(null, done);
+        });
+    });
+    
+    teardown((done) => {
+        persistence.close(null, done);
     });
 
     test('Crud Operations', (done) => {

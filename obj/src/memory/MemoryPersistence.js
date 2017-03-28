@@ -29,8 +29,10 @@ class MemoryPersistence {
             return;
         }
         this._loader.load(correlationId, (err, items) => {
-            this._items = items;
-            this._logger.trace(correlationId, "Loaded %d items", this._items.length);
+            if (err == null) {
+                this._items = items;
+                this._logger.trace(correlationId, "Loaded %d items", this._items.length);
+            }
             if (callback)
                 callback(err);
         });
@@ -49,7 +51,8 @@ class MemoryPersistence {
             return;
         }
         let task = this._saver.save(correlationId, this._items, (err) => {
-            this._logger.trace(correlationId, "Saved %d items", this._items.length);
+            if (err == null)
+                this._logger.trace(correlationId, "Saved %d items", this._items.length);
             if (callback)
                 callback(err);
         });

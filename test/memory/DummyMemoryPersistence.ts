@@ -9,8 +9,8 @@ import { IDummyPersistence } from '../IDummyPersistence';
 
 export class DummyMemoryPersistence 
     extends IdentifiableMemoryPersistence<Dummy, string> 
-    implements IDummyPersistence
-{
+    implements IDummyPersistence {
+
     public constructor() {
         super();
     }

@@ -37,7 +37,7 @@ export class JsonFilePersister<T> implements ILoader<T>, ISaver<T>, IConfigurabl
         }
 
         if (!fs.existsSync(this._path)) {
-            callback(new FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), null);
+            callback(null, []);
             return;
         }
 

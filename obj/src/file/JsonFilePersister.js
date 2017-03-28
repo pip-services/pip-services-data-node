@@ -24,7 +24,7 @@ class JsonFilePersister {
             return;
         }
         if (!fs.existsSync(this._path)) {
-            callback(new pip_services_commons_node_2.FileException(correlation_id, "NOT_FOUND", "File not found: " + this._path), null);
+            callback(null, []);
             return;
         }
         try {

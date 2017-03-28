@@ -1,11 +1,6 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
-## <a name="2.0.4"></a> 2.0.4 (2017-03-15)
-
-### Features
-* **mongodb** Added support for cluster connections
-
-## <a name="2.0.9"></a> 2.0.9 (2017-03-26)
+## <a name="2.0.10"></a> 2.0.10 (2017-03-26)
 
 ### Features
 * **mongodb** Made collection name configurable
@@ -15,6 +10,7 @@
 
 ### Bug fixes
 * **mongodb** Omitted id field from being persisted
+* **file** Fixed reading non-existed files
 
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 
