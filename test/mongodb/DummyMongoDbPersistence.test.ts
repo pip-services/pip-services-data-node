@@ -1,6 +1,4 @@
-import { Schema } from 'mongoose';
 import { YamlConfigReader } from 'pip-services-commons-node';
-import { ConfigParams } from 'pip-services-commons-node';
 import { Dummy } from '../Dummy';
 import { DummyPersistenceFixture } from '../DummyPersistenceFixture';
 import { DummyMongoDbPersistence } from './DummyMongoDbPersistence';
@@ -23,6 +21,10 @@ suite('DummyMongoDbPersistence', ()=> {
                 done(err);
             });
         });
+    });
+
+    teardown((done) => {
+        persistence.close(null, done);
     });
 
     test('Crud Operations', (done) => {
