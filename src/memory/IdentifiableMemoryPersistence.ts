@@ -27,7 +27,7 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
     }
 
     public configure(config: ConfigParams): void {
-        this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+        this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
 
     protected getPageByFilter(correlationId: string, filter: any, 

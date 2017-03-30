@@ -31,7 +31,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
     public configure(config: ConfigParams): void {
         super.configure(config);
         
-        this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+        this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
 
     protected getPageByFilter(correlationId: string, filter: any, paging: PagingParams, 

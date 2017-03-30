@@ -12,7 +12,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         this._maxPageSize = 100;
     }
     configure(config) {
-        this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+        this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
     getPageByFilter(correlationId, filter, paging, sort, select, callback) {
         let items = this._items;

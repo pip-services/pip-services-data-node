@@ -11,6 +11,7 @@
 ### Bug fixes
 * **mongodb** Omitted id field from being persisted
 * **file** Fixed reading non-existed files
+* **memory**, **file** Fixed max_page_size configuration parameter
 
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 

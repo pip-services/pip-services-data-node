@@ -18,7 +18,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
     }
     configure(config) {
         super.configure(config);
-        this._maxPageSize = config.getAsIntegerWithDefault("max_page_size", this._maxPageSize);
+        this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
     getPageByFilter(correlationId, filter, paging, sort, select, callback) {
         // Adjust max item count based on configuration
