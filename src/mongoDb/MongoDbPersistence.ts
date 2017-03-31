@@ -22,12 +22,13 @@ import { Document, Model, Schema, createConnection, model } from "mongoose";
 export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpenable, ICleanable {
 
     private _defaultConfig: ConfigParams = ConfigParams.fromTuples(
+        "collection", null,
+
         "connection.type", "mongodb",
         "connection.database", "test",
         "connection.host", "localhost",
         "connection.port", 27017,
 
-        "options.collection", null,
         "options.poll_size", 2,
         "options.keep_alive", 1,
         "options.connect_timeout", 5000,
