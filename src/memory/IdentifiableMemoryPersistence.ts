@@ -70,7 +70,7 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
 
         // Apply filter
         if (_.isFunction(filter))
-            items = _.filter(filter);
+            items = _.filter(items, filter);
 
         // Apply sorting
         if (_.isFunction(sort))
@@ -86,7 +86,7 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
 
         // Apply filter
         if (_.isFunction(filter))
-            items = _.filter(filter);
+            items = _.filter(items, filter);
 
         let item: T = items.length > 0 ? _.sample(items) : null;
         

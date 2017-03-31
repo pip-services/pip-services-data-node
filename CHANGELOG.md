@@ -1,6 +1,6 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
-## <a name="2.0.10"></a> 2.0.10 (2017-03-26)
+## <a name="2.0.11"></a> 2.0.11 (2017-03-31)
 
 ### Features
 * **mongodb** Made collection name configurable
@@ -12,6 +12,7 @@
 * **mongodb** Omitted id field from being persisted
 * **file** Fixed reading non-existed files
 * **memory**, **file** Fixed max_page_size configuration parameter
+* **memory** Fixed getRandom and getListByFilter
 
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 

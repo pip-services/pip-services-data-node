@@ -40,7 +40,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         let items = this._items;
         // Apply filter
         if (_.isFunction(filter))
-            items = _.filter(filter);
+            items = _.filter(items, filter);
         // Apply sorting
         if (_.isFunction(sort))
             items = _.sortUniqBy(items, sort);
@@ -51,7 +51,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         let items = this._items;
         // Apply filter
         if (_.isFunction(filter))
-            items = _.filter(filter);
+            items = _.filter(items, filter);
         let item = items.length > 0 ? _.sample(items) : null;
         if (item != null)
             this._logger.trace(correlationId, "Retrieved a random item");
