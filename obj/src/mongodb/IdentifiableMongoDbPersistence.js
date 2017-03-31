@@ -5,7 +5,6 @@ let async = require('async');
 const pip_services_commons_node_1 = require("pip-services-commons-node");
 const pip_services_commons_node_2 = require("pip-services-commons-node");
 const pip_services_commons_node_3 = require("pip-services-commons-node");
-const pip_services_commons_node_4 = require("pip-services-commons-node");
 const MongoDbPersistence_1 = require("./MongoDbPersistence");
 class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersistence {
     constructor(collection, schema) {
@@ -89,7 +88,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             }
             let pos = _.random(0, count - 1);
             this._model.find(filter)
-                .skip(pos)
+                .skip(pos >= 0 ? pos : 0)
                 .limit(1)
                 .exec((err, items) => {
                 let item = (items != null && items.length > 0) ? items[0] : null;
@@ -104,12 +103,11 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             return;
         }
         // Assign unique id
-        item._id = item.id || pip_services_commons_node_4.IdGenerator.nextLong();
-        // Remove id field
-        delete item.id;
-        this._model.create(item, (err, newItem) => {
+        let newItem = _.omit(item, 'id');
+        newItem._id = item.id || pip_services_commons_node_3.IdGenerator.nextLong();
+        this._model.create(newItem, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem._id);
             newItem = this.convertToPublic(newItem);
             callback(err, newItem);
         });
@@ -120,17 +118,17 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
                 callback(null, null);
             return;
         }
-        if (item.id == null)
-            pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
-        item._id = item.id;
+        // Assign unique id
+        let newItem = _.omit(item, 'id');
+        newItem._id = item.id || pip_services_commons_node_3.IdGenerator.nextLong();
         let filter = {
-            id: item.id
+            _id: newItem._id
         };
         let options = {
             new: true,
             upsert: true
         };
-        this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
+        this._model.findOneAndUpdate(filter, newItem, options, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Set in %s with id = %s", this._collection, item.id);
             if (callback) {
@@ -145,7 +143,8 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
                 callback(null, null);
             return;
         }
-        var options = {
+        let newItem = _.omit(item.id);
+        let options = {
             new: true
         };
         this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {

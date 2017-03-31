@@ -1,6 +1,6 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
-## <a name="2.0.11"></a> 2.0.11 (2017-03-31)
+## <a name="2.0.12"></a> 2.0.12 (2017-03-31)
 
 ### Features
 * **mongodb** Made collection name configurable
@@ -13,6 +13,8 @@
 * **file** Fixed reading non-existed files
 * **memory**, **file** Fixed max_page_size configuration parameter
 * **memory** Fixed getRandom and getListByFilter
+* **mongodb** Fixed skip in getOneRandom
+* **mongodb** Added clonning objects to avoid changing original data
 
 ## <a name="2.0.5"></a> 2.0.5 (2017-03-15)
 

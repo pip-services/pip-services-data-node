@@ -115,7 +115,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             let pos = _.random(0, count - 1);
 
             this._model.find(filter)
-                .skip(pos)
+                .skip(pos >= 0 ? pos : 0)
                 .limit(1)
                 .exec((err, items) => {
                     let item = (items != null && items.length > 0) ? items[0] : null;
@@ -133,14 +133,12 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         }
 
         // Assign unique id
-        (item as any)._id = item.id || IdGenerator.nextLong();
+        let newItem: any = _.omit(item, 'id');
+        newItem._id = item.id || IdGenerator.nextLong();
 
-        // Remove id field
-        delete item.id;
-
-        this._model.create(item, (err, newItem) => {
+        this._model.create(newItem, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem.id);
+                this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem._id);
 
             newItem = this.convertToPublic(newItem);
             callback(err, newItem);
@@ -153,13 +151,12 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             return;
         }
 
-        if (item.id == null)
-            ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
-
-        (item as any)._id = item.id;
+        // Assign unique id
+        let newItem: any = _.omit(item, 'id');
+        newItem._id = item.id || IdGenerator.nextLong();
 
         let filter = {
-            id: item.id
+            _id: newItem._id
         };
 
         let options = {
@@ -167,7 +164,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             upsert: true
         };
         
-        this._model.findOneAndUpdate(filter, item, options, (err, newItem) => {
+        this._model.findOneAndUpdate(filter, newItem, options, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Set in %s with id = %s", this._collection, item.id);
            
@@ -184,7 +181,8 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             return;
         }
 
-        var options = {
+        let newItem = _.omit(item.id);
+        let options = {
             new: true
         };
 
