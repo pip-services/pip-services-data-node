@@ -1,5 +1,10 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.0.13"></a> 2.0.13 (2017-04-02)
+
+### Bug fixes
+* **memory** Added cloning for persisting objects to mimic real DB behavior
+
 ## <a name="2.0.12"></a> 2.0.12 (2017-03-31)
 
 ### Features

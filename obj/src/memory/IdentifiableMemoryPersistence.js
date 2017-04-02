@@ -74,9 +74,9 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
                 callback(null, null);
             return;
         }
-        if (item.id == null) {
+        item = _.clone(item);
+        if (item.id == null)
             pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
-        }
         this._items.push(item);
         this._logger.trace(correlationId, "Created %s", item);
         this.save(correlationId, (err) => {
@@ -90,9 +90,9 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
                 callback(null, null);
             return;
         }
-        if (item.id == null) {
+        item = _.clone(item);
+        if (item.id == null)
             pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
-        }
         let index = this._items.map((x) => { return x.id; }).indexOf(item.id);
         if (index < 0)
             this._items.push(item);
@@ -111,6 +111,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             callback(null, null);
             return;
         }
+        item = _.clone(item);
         this._items[index] = item;
         this._logger.trace(correlationId, "Updated %s", item);
         this.save(correlationId, (err) => {

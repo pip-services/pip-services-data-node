@@ -116,9 +116,9 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
             return;
         }
 
-        if (item.id == null) {
+        item = _.clone(item);
+        if (item.id == null)
             ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
-        }
 
         this._items.push(item);
         this._logger.trace(correlationId, "Created %s", item);
@@ -134,9 +134,9 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
             return;
         }
 
-        if (item.id == null) {
+        item = _.clone(item);
+        if (item.id == null)
             ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
-        }
 
         let index = this._items.map((x) => { return x.id; }).indexOf(item.id);
 
@@ -159,6 +159,7 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
             return;
         }
 
+        item = _.clone(item);
         this._items[index] = item;
         this._logger.trace(correlationId, "Updated %s", item);
 
