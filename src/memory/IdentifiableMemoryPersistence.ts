@@ -173,7 +173,7 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         var item = this._items[index];
 
         if (index < 0) {
-            this._logger.trace(correlationId, "Item with id = %s was not found", item.id);
+            this._logger.trace(correlationId, "Item with id = %s was not found", id);
             callback(null, null);
             return;
         }

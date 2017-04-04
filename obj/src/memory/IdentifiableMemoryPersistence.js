@@ -123,7 +123,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         var index = this._items.map((x) => { return x.id; }).indexOf(id);
         var item = this._items[index];
         if (index < 0) {
-            this._logger.trace(correlationId, "Item with id = %s was not found", item.id);
+            this._logger.trace(correlationId, "Item with id = %s was not found", id);
             callback(null, null);
             return;
         }

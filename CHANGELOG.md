@@ -1,5 +1,10 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.0.13"></a> 2.0.14 (2017-04-02)
+
+### Bug fixes
+* **memory** Fixed null pointer exception in deleteById()
+
 ## <a name="2.0.13"></a> 2.0.13 (2017-04-02)
 
 ### Bug fixes
