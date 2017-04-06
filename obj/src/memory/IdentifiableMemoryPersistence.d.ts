@@ -21,5 +21,4 @@ export declare class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K
     set(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     update(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void;
-    clear(correlationId: string, callback?: (err: any) => void): void;
 }

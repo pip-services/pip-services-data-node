@@ -4,8 +4,8 @@ import { IConfigurable } from 'pip-services-commons-node';
 
 import { JsonFilePersister } from './JsonFilePersister'
 import { MemoryPersistence } from '../memory/MemoryPersistence';
-import { ILoader } from '../.';
-import { ISaver } from '../.';
+import { ILoader } from '../ILoader';
+import { ISaver } from '../ISaver';
 
 export class FilePersistence<T> extends MemoryPersistence<T> implements IConfigurable {
     protected readonly _persister: JsonFilePersister<T>;

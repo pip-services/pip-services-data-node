@@ -36,9 +36,11 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         
         let items = this._items;
 
-        // Apply filter
+        // Filter and sort
         if (_.isFunction(filter))
             items = _.filter(items, filter);
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
 
         // Extract a page
         paging = paging != null ? paging : new PagingParams();
@@ -52,10 +54,6 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         if (skip > 0)
             items = _.slice(items, skip);
         items = _.take(items, take);
-
-        // Apply sorting
-        if (_.isFunction(sort))
-            items = _.sortUniqBy(items, sort);
         
         this._logger.trace(correlationId, "Retrieved %d items", items.length);
         
@@ -184,12 +182,6 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         this.save(correlationId, (err) => {
             if (callback) callback(err, item)
         });
-    }
-
-    public clear(correlationId: string, callback?: (err: any) => void): void {
-        this._items = [];
-        this._logger.trace(correlationId, "Cleared %s");
-        this.save(correlationId, callback);
     }
 
 }

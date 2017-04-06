@@ -18,7 +18,6 @@ Quick Links:
 
 ## Acknowledgements
 
-The .NET version of Pip.Services is created and maintained by:
+The Node.js version of Pip.Services is created and maintained by:
 - **Volodymyr Tkachenko**
 - **Sergey Seroukhov**
-- **Mark Zontak**

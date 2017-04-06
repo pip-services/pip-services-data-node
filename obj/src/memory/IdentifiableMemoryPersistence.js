@@ -16,9 +16,11 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
     }
     getPageByFilter(correlationId, filter, paging, sort, select, callback) {
         let items = this._items;
-        // Apply filter
+        // Filter and sort
         if (_.isFunction(filter))
             items = _.filter(items, filter);
+        if (_.isFunction(sort))
+            items = _.sortUniqBy(items, sort);
         // Extract a page
         paging = paging != null ? paging : new pip_services_commons_node_1.PagingParams();
         let skip = paging.getSkip(-1);
@@ -29,9 +31,6 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         if (skip > 0)
             items = _.slice(items, skip);
         items = _.take(items, take);
-        // Apply sorting
-        if (_.isFunction(sort))
-            items = _.sortUniqBy(items, sort);
         this._logger.trace(correlationId, "Retrieved %d items", items.length);
         let page = new pip_services_commons_node_2.DataPage(items, total);
         callback(null, page);
@@ -133,11 +132,6 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             if (callback)
                 callback(err, item);
         });
-    }
-    clear(correlationId, callback) {
-        this._items = [];
-        this._logger.trace(correlationId, "Cleared %s");
-        this.save(correlationId, callback);
     }
 }
 exports.IdentifiableMemoryPersistence = IdentifiableMemoryPersistence;
