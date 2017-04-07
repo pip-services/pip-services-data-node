@@ -29,7 +29,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
         "connection.host", "localhost",
         "connection.port", 27017,
 
-        "options.poll_size", 2,
+        "options.max_pool_size", 2,
         "options.keep_alive", 1,
         "options.connect_timeout", 5000,
         "options.auto_reconnect", true,
@@ -110,7 +110,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 });
             },
             (callback) => {
-                if (connections == null && connections.length == 0) {
+                if (connections == null || connections.length == 0) {
                     let err = new ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
                     callback(err);
                     return;
@@ -155,7 +155,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 if (uri == null)
                     uri = "mongodb://" + hosts + "/" + this._database;
 
-                let pollSize = this._options.getAsNullableInteger("poll_size");
+                let maxPoolSize = this._options.getAsNullableInteger("max_pool_size");
                 let keepAlive = this._options.getAsNullableInteger("keep_alive");
                 let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
                 let autoReconnect = this._options.getAsNullableBoolean("auto_reconnect");
@@ -169,7 +169,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 try {
                     settings = {
                         server: {
-                            poolSize: pollSize,
+                            poolSize: maxPoolSize,
                             socketOptions: {
                                 keepAlive: keepAlive,
                                 connectTimeoutMS: connectTimeoutMS
