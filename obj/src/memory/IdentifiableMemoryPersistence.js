@@ -118,6 +118,22 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
                 callback(err, item);
         });
     }
+    updatePartially(correlationId, id, data, callback) {
+        let index = this._items.map((x) => { return x.id; }).indexOf(id);
+        if (index < 0) {
+            this._logger.trace(correlationId, "Item with id = %s was not found", id);
+            callback(null, null);
+            return;
+        }
+        let item = this._items[index];
+        item = _.extend(item, data.getAsObject());
+        this._items[index] = item;
+        this._logger.trace(correlationId, "Partially updated %s by %s", item, id);
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err, item);
+        });
+    }
     deleteById(correlationId, id, callback) {
         var index = this._items.map((x) => { return x.id; }).indexOf(id);
         var item = this._items[index];

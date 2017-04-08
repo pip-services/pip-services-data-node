@@ -1,6 +1,7 @@
 var assert = require('chai').assert;
 var async = require('async');
 
+import { AnyValueMap } from 'pip-services-commons-node';
 import { Dummy } from './Dummy';
 import { IDummyPersistence } from './IDummyPersistence';
 
@@ -64,13 +65,30 @@ export class DummyPersistenceFixture {
                 });
             },
             (callback) => {
+                // Partially update the dummy
+                this._persistence.updatePartially(
+                    null, dummy1.id,  
+                    AnyValueMap.fromTuples(
+                        'content', 'Partially Updated Content 1'
+                    ),
+                    (err: any, result: Dummy) => {
+                        assert.isNotNull(result);
+                        assert.equal(dummy1.id, result.id);
+                        assert.equal(dummy1.key, result.key);
+                        assert.equal('Partially Updated Content 1', result.content);
+
+                        callback(err);
+                    }
+                );
+            },
+            (callback) => {
                 // Get the dummy by Id
                 this._persistence.getOneById(null, dummy1.id, (err: any, result: Dummy) => {
                     // Try to get item
                     assert.isNotNull(result);
                     assert.equal(dummy1.id, result.id);
                     assert.equal(dummy1.key, result.key);
-                    assert.equal(dummy1.content, result.content);
+                    assert.equal('Partially Updated Content 1', result.content);
 
                     callback(err);
                 });
@@ -81,7 +99,7 @@ export class DummyPersistenceFixture {
                     assert.isNotNull(result);
                     assert.equal(dummy1.id, result.id);
                     assert.equal(dummy1.key, result.key);
-                    assert.equal(dummy1.content, result.content);
+                    assert.equal('Partially Updated Content 1', result.content);
 
                     callback(err);
                 });

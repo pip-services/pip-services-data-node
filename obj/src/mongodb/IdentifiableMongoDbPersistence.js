@@ -143,13 +143,34 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
                 callback(null, null);
             return;
         }
-        let newItem = _.omit(item.id);
+        let newItem = _.omit(item, 'id');
         let options = {
             new: true
         };
-        this._model.findByIdAndUpdate(item.id, item, options, (err, newItem) => {
+        this._model.findByIdAndUpdate(item.id, newItem, options, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Update in %s with id = %s", this._collection, item.id);
+            if (callback) {
+                newItem = this.convertToPublic(newItem);
+                callback(err, newItem);
+            }
+        });
+    }
+    updatePartially(correlationId, id, data, callback) {
+        if (data == null || id == null) {
+            if (callback)
+                callback(null, null);
+            return;
+        }
+        let newItem = {
+            $set: data.getAsObject()
+        };
+        let options = {
+            new: true
+        };
+        this._model.findByIdAndUpdate(id, newItem, options, (err, newItem) => {
+            if (!err)
+                this._logger.trace(correlationId, "Update partially in %s with id = %s", this._collection, id);
             if (callback) {
                 newItem = this.convertToPublic(newItem);
                 callback(err, newItem);

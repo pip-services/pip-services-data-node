@@ -3,6 +3,7 @@ import { IConfigurable } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
 import { PagingParams } from 'pip-services-commons-node';
 import { DataPage } from 'pip-services-commons-node';
+import { AnyValueMap } from 'pip-services-commons-node';
 import { MemoryPersistence } from './MemoryPersistence';
 import { IWriter } from '../.';
 import { IGetter } from '../.';
@@ -20,5 +21,6 @@ export declare class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K
     create(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     set(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     update(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
+    updatePartially(correlationId: string, id: K, data: AnyValueMap, callback?: (err: any, item: T) => void): void;
     deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void;
 }

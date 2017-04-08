@@ -1,6 +1,6 @@
 {
     "name": "pip-services-data-node",
-    "version": "2.0.13",
+    "version": "2.1.0",
     "author": "Conceptual Vision Consulting LLC",
     "description": "Data processing and persistence components for Pip.Services in Node.js",
     "contributors": [

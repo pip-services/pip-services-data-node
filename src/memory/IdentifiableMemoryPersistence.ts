@@ -6,6 +6,7 @@ import { ConfigParams } from 'pip-services-commons-node';
 import { PagingParams } from 'pip-services-commons-node';
 import { SortParams } from 'pip-services-commons-node';
 import { DataPage } from 'pip-services-commons-node';
+import { AnyValueMap } from 'pip-services-commons-node';
 import { ObjectWriter } from 'pip-services-commons-node';
 import { IdGenerator } from 'pip-services-commons-node';
 import { NotFoundException } from 'pip-services-commons-node';
@@ -160,6 +161,27 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         item = _.clone(item);
         this._items[index] = item;
         this._logger.trace(correlationId, "Updated %s", item);
+
+        this.save(correlationId, (err) => {
+            if (callback) callback(err, item)
+        });
+    }
+
+    public updatePartially(correlationId: string, id: K, data: AnyValueMap,
+        callback?: (err: any, item: T) => void): void {
+            
+        let index = this._items.map((x) => { return x.id; }).indexOf(id);
+
+        if (index < 0) {
+            this._logger.trace(correlationId, "Item with id = %s was not found", id);
+            callback(null, null);
+            return;
+        }
+
+        let item: any = this._items[index];
+        item = _.extend(item, data.getAsObject())
+        this._items[index] = item;
+        this._logger.trace(correlationId, "Partially updated %s by %s", item, id);
 
         this.save(correlationId, (err) => {
             if (callback) callback(err, item)

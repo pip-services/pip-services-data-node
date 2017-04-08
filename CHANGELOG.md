@@ -1,5 +1,14 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.1.0"></a> 2.1.0 (2017-04-08)
+
+### Features
+* Added IPartialUpdater interface
+* Added updatePartially() method to all Identifiable persistence components
+
+### Breaking Changes
+* Removed IDynamicWriter interface
+
 ## <a name="2.0.13"></a> 2.0.14 (2017-04-02)
 
 ### Bug fixes

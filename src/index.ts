@@ -1,4 +1,4 @@
-export { IDynamicWriter } from './IDynamicWriter';
+export { IPartialUpdater } from './IPartialUpdater';
 export { IFilteredPageReader } from './IFilteredPageReader';
 export { IFilteredReader } from './IFilteredReader';
 export { IGetter } from './IGetter';

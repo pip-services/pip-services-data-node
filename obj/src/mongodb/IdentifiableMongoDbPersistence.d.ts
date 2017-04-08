@@ -1,6 +1,7 @@
 import { ConfigParams } from 'pip-services-commons-node';
 import { PagingParams } from 'pip-services-commons-node';
 import { DataPage } from 'pip-services-commons-node';
+import { AnyValueMap } from 'pip-services-commons-node';
 import { IIdentifiable } from 'pip-services-commons-node';
 import { Schema } from "mongoose";
 import { MongoDbPersistence } from './MongoDbPersistence';
@@ -16,5 +17,6 @@ export declare class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, 
     create(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     set(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     update(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
+    updatePartially(correlationId: string, id: K, data: AnyValueMap, callback?: (err: any, item: T) => void): void;
     deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void;
 }
