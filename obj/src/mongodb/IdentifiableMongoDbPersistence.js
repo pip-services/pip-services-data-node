@@ -72,6 +72,12 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             callback(null, items);
         });
     }
+    getListByIds(correlationId, ids, callback) {
+        let filter = {
+            _id: { $in: ids }
+        };
+        this.getListByFilter(correlationId, filter, null, null, callback);
+    }
     getOneById(correlationId, id, callback) {
         this._model.findById(id, (err, item) => {
             if (!err)
@@ -185,6 +191,17 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
                 oldItem = this.convertToPublic(oldItem);
                 callback(err, oldItem);
             }
+        });
+    }
+    deleteByIds(correlationId, ids, callback) {
+        let filter = {
+            _id: { $in: ids }
+        };
+        this._model.remove(filter, (err, count) => {
+            if (!err)
+                this._logger.trace(correlationId, "Deleted %d items from %s", count, this._collection);
+            if (callback)
+                callback(err);
         });
     }
 }

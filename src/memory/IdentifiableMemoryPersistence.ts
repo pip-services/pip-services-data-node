@@ -80,6 +80,14 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         callback(null, items);
     }
 
+    public getListByIds(correlationId: string, ids: K[],
+        callback: (err: any, items: T[]) => void): void {
+        let filter = (item: T) => {
+            return _.indexOf(ids, item.id) >= 0;
+        }
+        this.getListByFilter(correlationId, filter, null, null, callback);
+    }
+
     protected getOneRandom(correlationId: string, filter: any, callback: (err: any, item: T) => void): void {
         let items = this._items;
 
@@ -110,11 +118,6 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
     }
 
     public create(correlationId: string, item: T, callback?: (err: any, item: T) => void): void {
-        if (item == null) {
-            if (callback) callback(null, null);
-            return;
-        }
-
         item = _.clone(item);
         if (item.id == null)
             ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
@@ -128,11 +131,6 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
     }
 
     public set(correlationId: string, item: T, callback?: (err: any, item: T) => void): void {
-        if (item == null) {
-            if (callback) callback(null, null);
-            return;
-        }
-
         item = _.clone(item);
         if (item.id == null)
             ObjectWriter.setProperty(item, "id", IdGenerator.nextLong());
@@ -204,6 +202,35 @@ export class IdentifiableMemoryPersistence<T extends IIdentifiable<K>, K> extend
         this.save(correlationId, (err) => {
             if (callback) callback(err, item)
         });
+    }
+
+    protected deleteByFilter(correlationId: string, filter: any, callback?: (err: any) => void): void {
+        let deleted = 0;
+        for (let index = this._items.length - 1; index>= 0; index--) {
+            let item = this._items[index];
+            if (filter(item)) {
+                this._items.splice(index, 1);
+                deleted++;
+            }
+        }
+
+        if (deleted == 0) {
+            callback(null);
+            return;
+        }
+
+        this._logger.trace(correlationId, "Deleted %s items", deleted);
+
+        this.save(correlationId, (err) => {
+            if (callback) callback(err)
+        });
+    }
+
+    public deleteByIds(correlationId: string, ids: K[], callback?: (err: any) => void): void {
+        let filter = (item: T) => {
+            return _.indexOf(ids, item.id) >= 0;
+        }
+        this.deleteByFilter(correlationId, filter, callback);
     }
 
 }

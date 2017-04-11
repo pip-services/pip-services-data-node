@@ -96,6 +96,14 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         });
     }
 
+    public getListByIds(correlationId: string, ids: K[],
+        callback: (err: any, items: T[]) => void): void {
+        let filter = {
+            _id: { $in: ids }
+        }
+        this.getListByFilter(correlationId, filter, null, null, callback);
+    }
+
     public getOneById(correlationId: string, id: K, callback: (err: any, item: T) => void): void {
         this._model.findById(id, (err, item) => {
             if (!err)
@@ -236,4 +244,15 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         });
     }
 
+    public deleteByIds(correlationId: string, ids: K[], callback?: (err: any) => void): void {
+        let filter = {
+            _id: { $in: ids }
+        }
+        this._model.remove(filter, (err, count) => {
+            if (!err)
+                this._logger.trace(correlationId, "Deleted %d items from %s", count, this._collection);
+
+            if (callback) callback(err);
+        });
+    }
 }

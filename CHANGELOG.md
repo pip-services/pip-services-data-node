@@ -1,5 +1,10 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.2.0"></a> 2.2.0 (2017-04-11)
+
+### Features
+* Added getListByIds(), deleteByFilter(), and deleteByIds() methds to all Identifible persistence components
+
 ## <a name="2.1.0"></a> 2.1.0 (2017-04-08)
 
 ### Features

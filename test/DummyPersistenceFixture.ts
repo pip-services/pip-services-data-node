@@ -115,4 +115,62 @@ export class DummyPersistenceFixture {
             }
         ], callback);
     }
+
+    public testBatchOperations(callback: (err: any) => void): void {
+        let dummy1: Dummy;
+        let dummy2: Dummy;
+
+        async.series([
+            (callback) => {
+                // Create one dummy
+                this._persistence.create(null, this._dummy1, (err: any, result: Dummy) => {
+                    dummy1 = result;
+                    assert.isNotNull(dummy1);
+                    assert.isNotNull(dummy1.id);
+                    assert.equal(this._dummy1.key, dummy1.key);
+                    assert.equal(this._dummy1.content, dummy1.content);
+
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Create another dummy
+                this._persistence.create(null, this._dummy2, (err: any, result: Dummy) => {
+                    dummy2 = result;
+                    assert.isNotNull(dummy2);
+                    assert.isNotNull(dummy2.id);
+                    assert.equal(this._dummy2.key, dummy2.key);
+                    assert.equal(this._dummy2.content, dummy2.content);
+
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Read batch
+                this._persistence.getListByIds(null, [dummy1.id, dummy2.id], (err, items) => {
+                    assert.isArray(items);
+                    assert.lengthOf(items, 2);
+
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Delete batch
+                this._persistence.deleteByIds(null, [dummy1.id, dummy2.id], (err) => {
+                    assert.isNull(err);
+                    callback(err);
+                });
+            },
+            (callback) => {
+                // Read empty batch
+                this._persistence.getListByIds(null, [dummy1.id, dummy2.id], (err, items) => {
+                    assert.isArray(items);
+                    assert.lengthOf(items, 0);
+
+                    callback(err);
+                });
+            }
+        ], callback);
+    }
+
 }

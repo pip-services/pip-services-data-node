@@ -46,6 +46,12 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         this._logger.trace(correlationId, "Retrieved %d items", items.length);
         callback(null, items);
     }
+    getListByIds(correlationId, ids, callback) {
+        let filter = (item) => {
+            return _.indexOf(ids, item.id) >= 0;
+        };
+        this.getListByFilter(correlationId, filter, null, null, callback);
+    }
     getOneRandom(correlationId, filter, callback) {
         let items = this._items;
         // Apply filter
@@ -68,11 +74,6 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         callback(null, item);
     }
     create(correlationId, item, callback) {
-        if (item == null) {
-            if (callback)
-                callback(null, null);
-            return;
-        }
         item = _.clone(item);
         if (item.id == null)
             pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
@@ -84,11 +85,6 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         });
     }
     set(correlationId, item, callback) {
-        if (item == null) {
-            if (callback)
-                callback(null, null);
-            return;
-        }
         item = _.clone(item);
         if (item.id == null)
             pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
@@ -148,6 +144,31 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             if (callback)
                 callback(err, item);
         });
+    }
+    deleteByFilter(correlationId, filter, callback) {
+        let deleted = 0;
+        for (let index = this._items.length - 1; index >= 0; index--) {
+            let item = this._items[index];
+            if (filter(item)) {
+                this._items.splice(index, 1);
+                deleted++;
+            }
+        }
+        if (deleted == 0) {
+            callback(null);
+            return;
+        }
+        this._logger.trace(correlationId, "Deleted %s items", deleted);
+        this.save(correlationId, (err) => {
+            if (callback)
+                callback(err);
+        });
+    }
+    deleteByIds(correlationId, ids, callback) {
+        let filter = (item) => {
+            return _.indexOf(ids, item.id) >= 0;
+        };
+        this.deleteByFilter(correlationId, filter, callback);
     }
 }
 exports.IdentifiableMemoryPersistence = IdentifiableMemoryPersistence;

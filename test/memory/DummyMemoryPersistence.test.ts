@@ -18,4 +18,8 @@ suite('DummyMemoryPersistence', ()=> {
         fixture.testCrudOperations(done);
     });
 
+    test('Batch Operations', (done) => {
+        fixture.testBatchOperations(done);
+    });
+
 });
