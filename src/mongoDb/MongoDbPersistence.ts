@@ -68,8 +68,8 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     public configure(config: ConfigParams): void {
         config = config.setDefaults(this._defaultConfig);
 
-        this._connectionResolver.configure(config, true);
-        this._credentialResolver.configure(config, true);
+        this._connectionResolver.configure(config);
+        this._credentialResolver.configure(config);
 
         let collection = config.getAsStringWithDefault('collection', this._collection);
         if (collection != this._collection && this._schema != null) {
