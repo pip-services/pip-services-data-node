@@ -68,7 +68,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         let items = this._items.filter((x) => { return x.id == id; });
         let item = items.length > 0 ? items[0] : null;
         if (item != null)
-            this._logger.trace(correlationId, "Retrieved %s by %s", item, id);
+            this._logger.trace(correlationId, "Retrieved item %s", id);
         else
             this._logger.trace(correlationId, "Cannot find item by %s", id);
         callback(null, item);
@@ -78,7 +78,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         if (item.id == null)
             pip_services_commons_node_3.ObjectWriter.setProperty(item, "id", pip_services_commons_node_4.IdGenerator.nextLong());
         this._items.push(item);
-        this._logger.trace(correlationId, "Created %s", item);
+        this._logger.trace(correlationId, "Created item %s", item.id);
         this.save(correlationId, (err) => {
             if (callback)
                 callback(err, item);
@@ -93,7 +93,7 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
             this._items.push(item);
         else
             this._items[index] = item;
-        this._logger.trace(correlationId, "Set %s", item);
+        this._logger.trace(correlationId, "Set item %s", item.id);
         this.save(correlationId, (err) => {
             if (callback)
                 callback(err, item);
@@ -102,13 +102,13 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
     update(correlationId, item, callback) {
         let index = this._items.map((x) => { return x.id; }).indexOf(item.id);
         if (index < 0) {
-            this._logger.trace(correlationId, "Item with id = %s was not found", item.id);
+            this._logger.trace(correlationId, "Item %s was not found", item.id);
             callback(null, null);
             return;
         }
         item = _.clone(item);
         this._items[index] = item;
-        this._logger.trace(correlationId, "Updated %s", item);
+        this._logger.trace(correlationId, "Updated item %s", item.id);
         this.save(correlationId, (err) => {
             if (callback)
                 callback(err, item);
@@ -117,14 +117,14 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
     updatePartially(correlationId, id, data, callback) {
         let index = this._items.map((x) => { return x.id; }).indexOf(id);
         if (index < 0) {
-            this._logger.trace(correlationId, "Item with id = %s was not found", id);
+            this._logger.trace(correlationId, "Item %s was not found", id);
             callback(null, null);
             return;
         }
         let item = this._items[index];
         item = _.extend(item, data.getAsObject());
         this._items[index] = item;
-        this._logger.trace(correlationId, "Partially updated %s by %s", item, id);
+        this._logger.trace(correlationId, "Partially updated item %s", id);
         this.save(correlationId, (err) => {
             if (callback)
                 callback(err, item);
@@ -134,12 +134,12 @@ class IdentifiableMemoryPersistence extends MemoryPersistence_1.MemoryPersistenc
         var index = this._items.map((x) => { return x.id; }).indexOf(id);
         var item = this._items[index];
         if (index < 0) {
-            this._logger.trace(correlationId, "Item with id = %s was not found", id);
+            this._logger.trace(correlationId, "Item %s was not found", id);
             callback(null, null);
             return;
         }
         this._items.splice(index, 1);
-        this._logger.trace(correlationId, "Deleted %s", item);
+        this._logger.trace(correlationId, "Deleted item by %s", id);
         this.save(correlationId, (err) => {
             if (callback)
                 callback(err, item);

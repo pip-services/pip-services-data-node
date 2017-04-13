@@ -1,9 +1,12 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
-## <a name="2.2.1"></a> 2.2.1 (2017-04-13)
+## <a name="2.2.2"></a> 2.2.2 (2017-04-13)
 
 ### Features
 * Migrated to pip-services-commons-node v2.3
+
+### Bug fixes
+* Fixed debug messages in persistence classes
 
 ## <a name="2.2.0"></a> 2.2.0 (2017-04-11)
 

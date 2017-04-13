@@ -20,5 +20,6 @@ export declare class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, 
     update(correlationId: string, item: T, callback?: (err: any, item: T) => void): void;
     updatePartially(correlationId: string, id: K, data: AnyValueMap, callback?: (err: any, item: T) => void): void;
     deleteById(correlationId: string, id: K, callback?: (err: any, item: T) => void): void;
+    deleteByFilter(correlationId: string, filter: any, callback?: (err: any) => void): void;
     deleteByIds(correlationId: string, ids: K[], callback?: (err: any) => void): void;
 }

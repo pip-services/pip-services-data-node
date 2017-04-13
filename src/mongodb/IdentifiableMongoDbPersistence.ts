@@ -57,6 +57,9 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
                 return;
             }
 
+            if (items != null)
+                this._logger.trace(correlationId, "Retrieved %d from %s", items.length, this._collection);
+
             items = _.map(items, this.convertToPublic);
 
             if (pagingEnabled) {
@@ -91,6 +94,9 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
                 return;
             }
 
+            if (items != null)
+                this._logger.trace(correlationId, "Retrieved %d from %s", items.length, this._collection);
+                
             items = _.map(items, this.convertToPublic);
             callback(null, items);
         });
@@ -107,7 +113,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
     public getOneById(correlationId: string, id: K, callback: (err: any, item: T) => void): void {
         this._model.findById(id, (err, item) => {
             if (!err)
-                this._logger.trace(correlationId, "Retrieved from %s with id = %s", this._collection, id);
+                this._logger.trace(correlationId, "Retrieved from %s by id = %s", this._collection, id);
 
             item = this.convertToPublic(item);
             callback(err, item);
@@ -197,7 +203,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.findByIdAndUpdate(item.id, newItem, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update in %s with id = %s", this._collection, item.id);
+                this._logger.trace(correlationId, "Updated in %s with id = %s", this._collection, item.id);
 
             if (callback) {
                 newItem = this.convertToPublic(newItem);
@@ -223,7 +229,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
 
         this._model.findByIdAndUpdate(id, newItem, options, (err, newItem) => {
             if (!err)
-                this._logger.trace(correlationId, "Update partially in %s with id = %s", this._collection, id);
+                this._logger.trace(correlationId, "Updated partially in %s with id = %s", this._collection, id);
 
             if (callback) {
                 newItem = this.convertToPublic(newItem);
@@ -244,15 +250,19 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         });
     }
 
-    public deleteByIds(correlationId: string, ids: K[], callback?: (err: any) => void): void {
-        let filter = {
-            _id: { $in: ids }
-        }
+    public deleteByFilter(correlationId: string, filter: any, callback?: (err: any) => void): void {
         this._model.remove(filter, (err, count) => {
             if (!err)
                 this._logger.trace(correlationId, "Deleted %d items from %s", count, this._collection);
 
             if (callback) callback(err);
         });
+    }
+
+    public deleteByIds(correlationId: string, ids: K[], callback?: (err: any) => void): void {
+        let filter = {
+            _id: { $in: ids }
+        }
+        this.deleteByFilter(correlationId, filter, callback);
     }
 }
