@@ -1,5 +1,10 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.3.0"></a> 2.3.0 (2017-04-20)
+
+### Features
+* Added MongoDbConnectionResolver
+
 ## <a name="2.2.2"></a> 2.2.2 (2017-04-13)
 
 ### Features

@@ -9,25 +9,22 @@ import { IOpenable } from 'pip-services-commons-node';
 import { ICleanable } from 'pip-services-commons-node';
 import { CompositeLogger } from 'pip-services-commons-node';
 import { ConfigParams } from 'pip-services-commons-node';
-import { ConnectionResolver } from 'pip-services-commons-node';
-import { CredentialResolver } from 'pip-services-commons-node';
 import { ConnectionParams } from 'pip-services-commons-node';
 import { CredentialParams } from 'pip-services-commons-node';
-import { ConfigException } from 'pip-services-commons-node';
 import { ConnectionException } from 'pip-services-commons-node';
 import { BadRequestException } from 'pip-services-commons-node';
 
 import { Document, Model, Schema, createConnection, model } from "mongoose";
+
+import { MongoDbConnectionResolver } from './MongoDbConnectionResolver';
 
 export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpenable, ICleanable {
 
     private _defaultConfig: ConfigParams = ConfigParams.fromTuples(
         "collection", null,
 
-        "connection.type", "mongodb",
-        "connection.database", "test",
-        "connection.host", "localhost",
-        "connection.port", 27017,
+        // connections.*
+        // credential.*
 
         "options.max_pool_size", 2,
         "options.keep_alive", 1,
@@ -38,8 +35,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     );
 
     protected _logger: CompositeLogger = new CompositeLogger();
-    protected _connectionResolver: ConnectionResolver = new ConnectionResolver();
-    protected _credentialResolver: CredentialResolver = new CredentialResolver();
+    protected _connectionResolver: MongoDbConnectionResolver = new MongoDbConnectionResolver();
     protected _options: ConfigParams = new ConfigParams();
 
     protected _connection: any;
@@ -62,14 +58,12 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     public setReferences(references: IReferences): void {
         this._logger.setReferences(references);
         this._connectionResolver.setReferences(references);
-        this._credentialResolver.setReferences(references);
     }
 
     public configure(config: ConfigParams): void {
         config = config.setDefaults(this._defaultConfig);
 
         this._connectionResolver.configure(config);
-        this._credentialResolver.configure(config);
 
         let collection = config.getAsStringWithDefault('collection', this._collection);
         if (collection != this._collection && this._schema != null) {
@@ -92,115 +86,55 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
         return this._connection.readyState == 1;
     }
 
-    public open(correlationId: string, callback?: (err: any) => void): void {
-        let connections: ConnectionParams[];
-        let credential: CredentialParams;
+    private composeSettings(): any {
+        let maxPoolSize = this._options.getAsNullableInteger("max_pool_size");
+        let keepAlive = this._options.getAsNullableInteger("keep_alive");
+        let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
+        let autoReconnect = this._options.getAsNullableBoolean("auto_reconnect");
+        let maxPageSize = this._options.getAsNullableInteger("max_page_size");
+        let debug = this._options.getAsNullableBoolean("debug");
 
-        async.series([
-            (callback) => {
-                this._connectionResolver.resolveAll(correlationId, (err: any, result: ConnectionParams[]) => {
-                    connections = result;
-                    callback(err);
-                });
-            },
-            (callback) => {
-                this._credentialResolver.lookup(correlationId, (err: any, result: CredentialParams) => {
-                    credential = result;
-                    callback(err);
-                });
-            },
-            (callback) => {
-                if (connections == null || connections.length == 0) {
-                    let err = new ConfigException(correlationId, "NO_CONNECTION", "Database connection is not set");
-                    callback(err);
-                    return;
-                }
-
-                let hosts = '';
-                let uri: string = null;
-                this._database = '';
-
-                for (let index = 0; index < connections.length; index++) {
-                    let connection = connections[index];
-
-                    uri = connection.getUri();
-                    if (uri != null) break;
-
-                    let host = connection.getHost();
-                    if (host == null) {
-                        let err = new ConfigException(correlationId, "NO_HOST", "Connection host is not set");
-                        callback(err);
-                        return;
-                    }
-
-                    let port = connection.getPort();
-                    if (port == 0) {
-                        let err = new ConfigException(correlationId, "NO_PORT", "Connection port is not set");
-                        callback(err);
-                        return;
-                    }
-
-                    if (hosts.length > 0)
-                        hosts += ',';
-                    hosts += host + (port == null ? '' : ':' + port);
-
-                    this._database = connection.getAsNullableString("database");
-                    if (this._database == null) {
-                        let err = new ConfigException(correlationId, "NO_DATABASE", "Connection database is not set");
-                        callback(err);
-                        return;
-                    }
-                }
-
-                if (uri == null)
-                    uri = "mongodb://" + hosts + "/" + this._database;
-
-                let maxPoolSize = this._options.getAsNullableInteger("max_pool_size");
-                let keepAlive = this._options.getAsNullableInteger("keep_alive");
-                let connectTimeoutMS = this._options.getAsNullableInteger("connect_timeout");
-                let autoReconnect = this._options.getAsNullableBoolean("auto_reconnect");
-                let maxPageSize = this._options.getAsNullableInteger("max_page_size");
-                let debug = this._options.getAsNullableBoolean("debug");
-
-                this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
-
-                let settings: any;
-
-                try {
-                    settings = {
-                        server: {
-                            poolSize: maxPoolSize,
-                            socketOptions: {
-                                keepAlive: keepAlive,
-                                connectTimeoutMS: connectTimeoutMS
-                            },
-                            auto_reconnect: autoReconnect,
-                            max_page_size: maxPageSize,
-                            debug: debug
-                        }
-                    };
-
-                    if (credential && credential.getUsername()) {
-                        settings.user = credential.getUsername();
-                        settings.pass = credential.getPassword();
-                    }
-
-                    this._connection.open(uri, settings, (err) => {
-                        if (err)
-                            err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
-                        else
-                            this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
-
-                        callback(err);
-                    });
-                } catch (ex) {
-                    let err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(ex);
-
-                    callback(err);
-                }
+        let settings = {
+            server: {
+                poolSize: maxPoolSize,
+                socketOptions: {
+                    keepAlive: keepAlive,
+                    connectTimeoutMS: connectTimeoutMS
+                },
+                auto_reconnect: autoReconnect,
+                max_page_size: maxPageSize,
+                debug: debug
             }
-        ], (err) => {
-            if (callback) callback(err);
+        };
+
+        return settings;
+    }
+
+    public open(correlationId: string, callback?: (err: any) => void): void {
+        this._connectionResolver.resolve(correlationId, (err, uri) => {
+            if (err) {
+                if (callback) callback(err);
+                else this._logger.error(correlationId, err, 'Failed to resolve MongoDb connection');
+                return;
+            }
+
+            this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
+
+            try {
+                let settings = this.composeSettings();
+                this._connection.open(uri, settings, (err) => {
+                    if (err)
+                        err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
+                    else
+                        this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
+
+                    callback(err);
+                });
+            } catch (ex) {
+                let err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(ex);
+
+                callback(err);
+            }
         });
     }
 
