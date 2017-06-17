@@ -31,7 +31,8 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
         "options.connect_timeout", 5000,
         "options.auto_reconnect", true,
         "options.max_page_size", 100,
-        "options.debug", true
+        "options.debug", true,
+        "options.replica_set", false
     );
 
     protected _logger: CompositeLogger = new CompositeLogger();
@@ -122,7 +123,12 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
 
             try {
                 let settings = this.composeSettings();
-                this._connection.open(uri, settings, (err) => {
+
+                let replicaSet = this._options.getAsBoolean("replica_set");
+                replicaSet = replicaSet || uri.indexOf("replicaSet") > 0;
+                let openMethod = replicaSet ? 'openSet' : 'open';
+
+                this._connection[openMethod](uri, settings, (err) => {
                     if (err)
                         err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                     else

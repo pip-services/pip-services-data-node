@@ -1,5 +1,10 @@
 # Data processing and persistence components for Pip.Services in Node.js Changelog
 
+## <a name="2.3.1"></a> 2.3.1 (2017-06-16)
+
+### Bug Fixes
+* Fixed "not master" when trying to connect to replica set
+
 ## <a name="2.3.0"></a> 2.3.0 (2017-04-20)
 
 ### Features

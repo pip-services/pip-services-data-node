@@ -1,6 +1,6 @@
 {
     "name": "pip-services-data-node",
-    "version": "2.3.0",
+    "version": "2.3.1",
     "author": "Conceptual Vision Consulting LLC",
     "description": "Data processing and persistence components for Pip.Services in Node.js",
     "contributors": [
@@ -43,7 +43,7 @@
     "dependencies": {
         "lodash":  "^4.17.0",
         "async":  "^2.1.0",
-        "mongoose": "^4.8.0",
+        "mongoose": "^4.10.0",
         "pip-services-commons-node": "^2.0.0"
     },
     "devDependencies": {

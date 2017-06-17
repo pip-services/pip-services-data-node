@@ -11,7 +11,7 @@ class MongoDbPersistence {
         this._defaultConfig = pip_services_commons_node_2.ConfigParams.fromTuples("collection", null, 
         // connections.*
         // credential.*
-        "options.max_pool_size", 2, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true);
+        "options.max_pool_size", 2, "options.keep_alive", 1, "options.connect_timeout", 5000, "options.auto_reconnect", true, "options.max_page_size", 100, "options.debug", true, "options.replica_set", false);
         this._logger = new pip_services_commons_node_1.CompositeLogger();
         this._connectionResolver = new MongoDbConnectionResolver_1.MongoDbConnectionResolver();
         this._options = new pip_services_commons_node_2.ConfigParams();
@@ -80,7 +80,10 @@ class MongoDbPersistence {
             this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
             try {
                 let settings = this.composeSettings();
-                this._connection.open(uri, settings, (err) => {
+                let replicaSet = this._options.getAsBoolean("replica_set");
+                replicaSet = replicaSet || uri.indexOf("replicaSet") > 0;
+                let openMethod = replicaSet ? 'openSet' : 'open';
+                this._connection[openMethod](uri, settings, (err) => {
                     if (err)
                         err = new pip_services_commons_node_3.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                     else
