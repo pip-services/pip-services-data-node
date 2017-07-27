@@ -87,7 +87,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
     protected convertFromPublic(value: any): any {
         return value;
     }    
-    
+
     public isOpened(): boolean {
         return this._connection.readyState == 1;
     }

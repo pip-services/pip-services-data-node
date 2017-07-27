@@ -19,6 +19,10 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         super.configure(config);
         this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
+    // Convert object from public partial format
+    convertFromPublicPartial(value) {
+        return this.convertFromPublic(value);
+    }
     getPageByFilter(correlationId, filter, paging, sort, select, callback) {
         // Adjust max item count based on configuration
         paging = paging || new pip_services_commons_node_1.PagingParams();
@@ -176,7 +180,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             return;
         }
         let newItem = data.getAsObject();
-        newItem = this.convertFromPublic(newItem);
+        newItem = this.convertFromPublicPartial(newItem);
         let setItem = {
             $set: newItem
         };

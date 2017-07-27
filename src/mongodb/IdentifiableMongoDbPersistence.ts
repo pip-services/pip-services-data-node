@@ -35,6 +35,11 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         this._maxPageSize = config.getAsIntegerWithDefault("options.max_page_size", this._maxPageSize);
     }
 
+    // Convert object from public partial format
+    protected convertFromPublicPartial(value: any): any {
+        return this.convertFromPublic(value);
+    }    
+    
     protected getPageByFilter(correlationId: string, filter: any, paging: PagingParams, 
         sort: any, select: any, callback: (err: any, items: DataPage<T>) => void): void {
         // Adjust max item count based on configuration
@@ -224,7 +229,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         }
 
         let newItem = data.getAsObject();
-        newItem = this.convertFromPublic(newItem);
+        newItem = this.convertFromPublicPartial(newItem);
 
         let setItem = {
             $set: newItem

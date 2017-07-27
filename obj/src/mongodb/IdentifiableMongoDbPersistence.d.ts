@@ -10,6 +10,7 @@ export declare class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, 
     protected _maxPageSize: number;
     constructor(collection: string, schema: Schema);
     configure(config: ConfigParams): void;
+    protected convertFromPublicPartial(value: any): any;
     protected getPageByFilter(correlationId: string, filter: any, paging: PagingParams, sort: any, select: any, callback: (err: any, items: DataPage<T>) => void): void;
     protected getListByFilter(correlationId: string, filter: any, sort: any, select: any, callback: (err: any, items: T[]) => void): void;
     getListByIds(correlationId: string, ids: K[], callback: (err: any, items: T[]) => void): void;
