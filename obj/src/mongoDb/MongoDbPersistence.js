@@ -44,6 +44,10 @@ class MongoDbPersistence {
             value = value.toJSON();
         return value;
     }
+    // Convert object from public format
+    convertFromPublic(value) {
+        return value;
+    }
     isOpened() {
         return this._connection.readyState == 1;
     }

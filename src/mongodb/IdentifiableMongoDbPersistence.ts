@@ -150,6 +150,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         // Assign unique id
         let newItem: any = _.omit(item, 'id');
         newItem._id = item.id || IdGenerator.nextLong();
+        newItem = this.convertFromPublic(newItem);
 
         this._model.create(newItem, (err, newItem) => {
             if (!err)
@@ -169,6 +170,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         // Assign unique id
         let newItem: any = _.omit(item, 'id');
         newItem._id = item.id || IdGenerator.nextLong();
+        newItem = this.convertFromPublic(newItem);
 
         let filter = {
             _id: newItem._id
@@ -197,6 +199,7 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
         }
 
         let newItem = _.omit(item, 'id');
+        newItem = this.convertFromPublic(newItem);
         let options = {
             new: true
         };
@@ -220,14 +223,17 @@ export class IdentifiableMongoDbPersistence<T extends IIdentifiable<K>, K> exten
             return;
         }
 
-        let newItem = {
-            $set: data.getAsObject()
+        let newItem = data.getAsObject();
+        newItem = this.convertFromPublic(newItem);
+
+        let setItem = {
+            $set: newItem
         };
         let options = {
             new: true
         };
 
-        this._model.findByIdAndUpdate(id, newItem, options, (err, newItem) => {
+        this._model.findByIdAndUpdate(id, setItem, options, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Updated partially in %s with id = %s", this._collection, id);
 

@@ -115,6 +115,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         // Assign unique id
         let newItem = _.omit(item, 'id');
         newItem._id = item.id || pip_services_commons_node_3.IdGenerator.nextLong();
+        newItem = this.convertFromPublic(newItem);
         this._model.create(newItem, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Created in %s with id = %s", this._collection, newItem._id);
@@ -131,6 +132,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
         // Assign unique id
         let newItem = _.omit(item, 'id');
         newItem._id = item.id || pip_services_commons_node_3.IdGenerator.nextLong();
+        newItem = this.convertFromPublic(newItem);
         let filter = {
             _id: newItem._id
         };
@@ -154,6 +156,7 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
             return;
         }
         let newItem = _.omit(item, 'id');
+        newItem = this.convertFromPublic(newItem);
         let options = {
             new: true
         };
@@ -172,13 +175,15 @@ class IdentifiableMongoDbPersistence extends MongoDbPersistence_1.MongoDbPersist
                 callback(null, null);
             return;
         }
-        let newItem = {
-            $set: data.getAsObject()
+        let newItem = data.getAsObject();
+        newItem = this.convertFromPublic(newItem);
+        let setItem = {
+            $set: newItem
         };
         let options = {
             new: true
         };
-        this._model.findByIdAndUpdate(id, newItem, options, (err, newItem) => {
+        this._model.findByIdAndUpdate(id, setItem, options, (err, newItem) => {
             if (!err)
                 this._logger.trace(correlationId, "Updated partially in %s with id = %s", this._collection, id);
             if (callback) {

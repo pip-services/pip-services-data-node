@@ -41,8 +41,8 @@
         "docgen": "typedoc --out doc/api src --mode file --excludeExternals --target ES5 --ignoreCompilerErrors --readme doc/ApiReference.md"
     },
     "dependencies": {
-        "lodash":  "^4.17.0",
-        "async":  "^2.1.0",
+        "lodash": "^4.17.0",
+        "async": "^2.1.0",
         "mongoose": "^4.10.0",
         "pip-services-commons-node": "^2.0.0"
     },
