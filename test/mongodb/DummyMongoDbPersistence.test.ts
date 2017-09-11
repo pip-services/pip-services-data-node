@@ -1,4 +1,6 @@
-import { YamlConfigReader } from 'pip-services-commons-node';
+let process = require('process');
+
+import { ConfigParams } from 'pip-services-commons-node';
 import { Dummy } from '../Dummy';
 import { DummyPersistenceFixture } from '../DummyPersistenceFixture';
 import { DummyMongoDbPersistence } from './DummyMongoDbPersistence';
@@ -7,9 +9,20 @@ suite('DummyMongoDbPersistence', ()=> {
     let persistence: DummyMongoDbPersistence;
     let fixture: DummyPersistenceFixture;
 
+    let mongoUri = process.env['MONGO_URI'];
+    let mongoHost = process.env['MONGO_HOST'] || 'localhost';
+    let mongoPort = process.env['MONGO_PORT'] || 27017;
+    let mongoDatabase = process.env['MONGO_DB'] || 'test';
+    if (mongoUri == null && mongoHost == null)
+        return;
+
     setup((done) => {
-        let config = YamlConfigReader.readConfig(null, './config/test_connections.yaml', null);
-        let dbConfig = config.getSection('mongodb');
+        let dbConfig = ConfigParams.fromTuples(
+            'connection.uri', mongoUri,
+            'connection.host', mongoHost,
+            'connection.port', mongoPort,
+            'connection.database', mongoDatabase
+        );
 
         persistence = new DummyMongoDbPersistence();
         persistence.configure(dbConfig);

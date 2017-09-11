@@ -1,6 +1,6 @@
 {
     "name": "pip-services-data-node",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "author": "Conceptual Vision Consulting LLC",
     "description": "Data processing and persistence components for Pip.Services in Node.js",
     "contributors": [
@@ -35,6 +35,7 @@
         "build": "tsc",
         "watch": "tsc --watch",
         "test": "mocha -t 10000 -R spec -u tdd --recursive ./obj/test",
+        "test-tc": "mocha -t 10000 -R mocha-teamcity-reporter -u tdd --recursive ./obj/test",
         "retest": "tsc && mocha -t 10000 -R spec -u tdd --recursive ./obj/test",
         "benchmark": "matcha -R clean -I tdd ./obj/benchmark/run.js",
         "rebenchmark": "tsc && matcha -R clean -I tdd ./obj/benchmark/run.js",
@@ -44,7 +45,7 @@
         "lodash": "^4.17.0",
         "async": "^2.1.0",
         "mongoose": "^4.10.0",
-        "pip-services-commons-node": "^2.0.0"
+        "pip-services-commons-node": "^2.6.4"
     },
     "devDependencies": {
         "@types/node": "*",
@@ -57,6 +58,7 @@
         "chai": "*",
         "matcha": "*",
         "memjs": "*",
-        "mocha": "*"
+        "mocha": "*",
+        "mocha-teamcity-reporter": "^1.1.1"
     }
 }
