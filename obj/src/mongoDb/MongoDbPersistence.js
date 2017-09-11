@@ -81,7 +81,7 @@ class MongoDbPersistence {
                     this._logger.error(correlationId, err, 'Failed to resolve MongoDb connection');
                 return;
             }
-            this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
+            this._logger.debug(correlationId, "Connecting to mongodb");
             try {
                 let settings = this.composeSettings();
                 let replicaSet = this._options.getAsBoolean("replica_set");
@@ -90,8 +90,10 @@ class MongoDbPersistence {
                 this._connection[openMethod](uri, settings, (err) => {
                     if (err)
                         err = new pip_services_commons_node_3.ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
-                    else
+                    else {
+                        this._database = this._database || this._connection.db.databaseName;
                         this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
+                    }
                     callback(err);
                 });
             }

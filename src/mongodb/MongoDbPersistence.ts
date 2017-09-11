@@ -124,7 +124,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 return;
             }
 
-            this._logger.debug(correlationId, "Connecting to mongodb database %s", this._database);
+            this._logger.debug(correlationId, "Connecting to mongodb");
 
             try {
                 let settings = this.composeSettings();
@@ -136,8 +136,10 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 this._connection[openMethod](uri, settings, (err) => {
                     if (err)
                         err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
-                    else
+                    else {
+                        this._database = this._database || this._connection.db.databaseName;
                         this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
+                    }
 
                     callback(err);
                 });
