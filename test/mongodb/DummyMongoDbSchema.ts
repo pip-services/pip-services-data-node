@@ -4,7 +4,7 @@ export let DummyMongoDbSchema = function(): Schema {
 
     let schema: Schema = new Schema(
         {
-            _id: { type: String, unique: true },
+            _id: { type: String },
             key: { type: String, required: true },
             content: { type: String, required: false }
         },
@@ -12,6 +12,8 @@ export let DummyMongoDbSchema = function(): Schema {
             autoIndex: true
         }
     );
+
+    schema.index({ key: 1 });
 
     schema.set('toJSON', {
         transform: function (doc, ret) {

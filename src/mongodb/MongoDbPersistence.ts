@@ -134,14 +134,14 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                 let openMethod = replicaSet ? 'openSet' : 'open';
 
                 this._connection[openMethod](uri, settings, (err) => {
-                    if (err)
+                    if (err) {
                         err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
-                    else {
+                    } else {
                         this._database = this._database || this._connection.db.databaseName;
                         this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
                     }
 
-                    callback(err);
+                    if (callback) callback(err);
                 });
             } catch (ex) {
                 let err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(ex);
@@ -169,12 +169,23 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
             return;
         }
 
-        this._connection.db.dropCollection(this._collection, (err) => {
-            if (err && err.message != "ns not found") {
+        // this._connection.db.dropCollection(this._collection, (err) => {
+        //     if (err && (err.message != "ns not found" || err.message != "topology was destroyed"))
+        //         err = null;
+
+        //     if (err) {
+        //         err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed")
+        //             .withCause(err);
+        //     }
+            
+        //     if (callback) callback(err);
+        // });
+
+        this._model.remove({}, (err) => {
+            if (err) {
                 err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed")
                     .withCause(err);
-            } else if (err && err.message == "ns not found")
-                err = null;
+            }
             
             if (callback) callback(err);
         });
