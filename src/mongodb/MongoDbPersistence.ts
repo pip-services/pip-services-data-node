@@ -138,7 +138,7 @@ export class MongoDbPersistence implements IReferenceable, IConfigurable, IOpena
                         err = new ConnectionException(correlationId, "CONNECT_FAILED", "Connection to mongodb failed").withCause(err);
                     } else {
                         this._database = this._database || this._connection.db.databaseName;
-                        this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
+                        this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", this._database, this._collection);
                     }
 
                     if (callback) callback(err);

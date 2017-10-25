@@ -93,7 +93,7 @@ class MongoDbPersistence {
                     }
                     else {
                         this._database = this._database || this._connection.db.databaseName;
-                        this._logger.debug(correlationId, "Connected to mongodb database %s", this._database);
+                        this._logger.debug(correlationId, "Connected to mongodb database %s, collection %s", this._database, this._collection);
                     }
                     if (callback)
                         callback(err);
