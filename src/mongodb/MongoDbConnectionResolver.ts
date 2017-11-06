@@ -102,7 +102,7 @@ export class MongoDbConnectionResolver implements IReferenceable, IConfigurable 
         options.remove('username');
         options.remove('password');
         let params = '';
-        let keys = options.getKeyNames();
+        let keys = options.getKeys();
         for (let key of keys) {
             if (params.length > 0)
                 params += '&';
