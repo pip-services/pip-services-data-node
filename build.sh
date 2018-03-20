@@ -18,7 +18,7 @@ set -o pipefail
 rm -rf ./obj
 
 # Build docker image
-docker build -f Dockerfile.build -t ${IMAGE} .
+docker build -f docker/Dockerfile.build -t ${IMAGE} .
 
 # Create and copy compiled files, then destroy
 docker create --name ${CONTAINER} ${IMAGE}

@@ -20,7 +20,4 @@ else
 npm-cli-login
 fi
 
-git tag $TAG
-git push --tags
-
 npm publish
